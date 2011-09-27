@@ -1,4 +1,4 @@
 [Project]
-Name=kdev_kernel_plugin
 Manager=KDevCMakeManager
+Name=kdev-kernel
 VersionControl=kdevgit

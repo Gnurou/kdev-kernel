@@ -12,14 +12,23 @@ include_directories(
 )
 
 set(kdev_kernel_plugin_SRCS
-	kernelplugin.cpp
+    kernelplugin.cpp
 )
 
-kde4_add_plugin(kdevkernelplugin ${kdev_kernel_plugin_SRCS})
+kde4_add_plugin(kdevkernel
+    ${kdev_kernel_plugin_SRCS})
 
-target_link_libraries(kdevprojectviewplugin ${KDEVPLATFORM_INTERFACES_LIBRARIES} ${KDEVPLATFORM_LANGUAGE_LIBRARIES}
+target_link_libraries(kdevkernel
+    ${KDEVPLATFORM_PROJECT_LIBRARIES}
+    ${KDEVPLATFORM_INTERFACES_LIBRARIES}
 )
 
-install(TARGETS kdevprojectviewplugin DESTINATION ${PLUGIN_INSTALL_DIR})
+install(
+    TARGETS kdevkernel
+    DESTINATION ${PLUGIN_INSTALL_DIR}
+)
 
-install(FILES kdevkernelplugin.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+install(
+    FILES kdevkernel.desktop
+    DESTINATION ${SERVICES_INSTALL_DIR}
+)

@@ -18,14 +18,49 @@
 #ifndef KDEVKERNELPLUGIN_H
 #define KDEVKERNELPLUGIN_H
 
-#include <interfaces/iplugin.h>
+#include <project/interfaces/ibuildsystemmanager.h>
+#include <project/interfaces/iprojectbuilder.h>
+#include <project/abstractfilemanagerplugin.h>
 #include <QVariant>
 
-class KernelPlugin : public KDevelop::IPlugin
+class KJob;
+namespace KDevelop
+{
+class ProjectBaseItem;
+class ProjectTargetItem;
+class ProjectFileItem;
+class ProjectFolderItem;
+class IProject;
+}
+
+class KernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDevelop::IBuildSystemManager, public KDevelop::IProjectBuilder
 {
     Q_OBJECT
+    Q_INTERFACES(KDevelop::IProjectBuilder)
+    Q_INTERFACES(KDevelop::IProjectFileManager)
+    Q_INTERFACES(KDevelop::IBuildSystemManager)
 public:
     KernelPlugin(QObject *parent, const QVariantList &args);
-}
+
+    // AbstractFileManagerPlugin interface
+
+    // IBuildSystemManager interface
+    virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *) const;
+    virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *) const;
+    virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *) const;
+    virtual KDevelop::ProjectTargetItem *createTarget(const QString& target, KDevelop::ProjectFolderItem *parent);
+    virtual bool removeTarget(KDevelop::ProjectTargetItem *target);
+    virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *) const;
+    virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target);
+    virtual bool removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files);
+    virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *) const;
+
+    // IProjectBuilder interface
+    virtual KJob *install(KDevelop::ProjectBaseItem* item);
+    virtual KJob *build(KDevelop::ProjectBaseItem *dom);
+    virtual KJob *clean(KDevelop::ProjectBaseItem *dom);
+    virtual KJob *configure(KDevelop::IProject*);
+    virtual KJob *prune(KDevelop::IProject*);
+};
 
 #endif
