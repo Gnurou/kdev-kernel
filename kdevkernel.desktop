@@ -1,9 +1,10 @@
 [Desktop Entry]
 Type=Service
-Comment=KDevelop plugin for hacking the Linux kernel
-Name=Kernel hacking plugin
-GenericName=KernelPlugin
+Name=Linux Kernel
+Comment=Linux Kernel Tree Support
+Icon=gear
 ServiceTypes=KDevelop/Plugin
+GenericName=KernelPlugin
 X-KDE-Library=kdevkernel
 X-KDE-PluginInfo-Name=kdevkernel
 X-KDE-PluginInfo-Author=Alexandre Courbot
@@ -11,5 +12,6 @@ X-KDE-PluginInfo-Email=gnurou@gmail.com
 X-KDE-PluginInfo-License=GPL
 X-KDevelop-Version=12
 X-KDevelop-Category=Global
+X-KDevelop-Interfaces=org.kdevelop.IProjectBuilder,org.kdevelop.IProjectFileManager,org.kdevelop.IBuildSystemManager
 X-KDevelop-Mode=GUI
 X-KDevelop-LoadMode=UserSelectable

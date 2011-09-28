@@ -45,22 +45,22 @@ public:
     // AbstractFileManagerPlugin interface
 
     // IBuildSystemManager interface
-    virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *) const;
-    virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *) const;
-    virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *) const;
+    virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *item) const;
+    virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
+    virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *item) const;
     virtual KDevelop::ProjectTargetItem *createTarget(const QString& target, KDevelop::ProjectFolderItem *parent);
     virtual bool removeTarget(KDevelop::ProjectTargetItem *target);
-    virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *) const;
+    virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *item) const;
     virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target);
     virtual bool removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files);
-    virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *) const;
+    virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *item) const;
 
     // IProjectBuilder interface
     virtual KJob *install(KDevelop::ProjectBaseItem* item);
-    virtual KJob *build(KDevelop::ProjectBaseItem *dom);
-    virtual KJob *clean(KDevelop::ProjectBaseItem *dom);
-    virtual KJob *configure(KDevelop::IProject*);
-    virtual KJob *prune(KDevelop::IProject*);
+    virtual KJob *build(KDevelop::ProjectBaseItem *item);
+    virtual KJob *clean(KDevelop::ProjectBaseItem *item);
+    virtual KJob *configure(KDevelop::IProject *item);
+    virtual KJob *prune(KDevelop::IProject *item);
 };
 
 #endif

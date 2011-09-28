@@ -20,6 +20,7 @@
 #include <interfaces/iprojectcontroller.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
+#include <project/projectmodel.h>
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <KAboutData>
@@ -36,29 +37,32 @@ K_EXPORT_PLUGIN(KernelProjectFactory(
         KLocalizedString(),
         "",
         "gnurou@gmail.com"
-
     )
 ))
 
 KernelPlugin::KernelPlugin(QObject *parent, const QVariantList &args)
     : KDevelop::AbstractFileManagerPlugin(KernelProjectFactory::componentData(), parent)
 {
-    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager);
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
 }
 
-KDevelop::IProjectBuilder *KernelPlugin::builder(KDevelop::ProjectFolderItem *) const
+KDevelop::IProjectBuilder *KernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
 {
     return 0;
 }
 
-KUrl::List KernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *) const
+KUrl::List KernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
     return KUrl::List();
 }
 
-QHash<QString,QString> KernelPlugin::defines(KDevelop::ProjectBaseItem *) const
+QHash<QString,QString> KernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
-    return QHash<QString, QString>();
+    QHash<QString, QString> defines;
+    defines.insert("__KERNEL__", "1");
+    return defines;
 }
 
 KDevelop::ProjectTargetItem *KernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
@@ -71,7 +75,7 @@ bool KernelPlugin::removeTarget(KDevelop::ProjectTargetItem *target)
     return false;
 }
 
-QList<KDevelop::ProjectTargetItem *> KernelPlugin::targets(KDevelop::ProjectFolderItem *) const
+QList<KDevelop::ProjectTargetItem *> KernelPlugin::targets(KDevelop::ProjectFolderItem *item) const
 {
     return QList<KDevelop::ProjectTargetItem *>();
 }
@@ -86,32 +90,33 @@ bool KernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileItem 
     return false;
 }
 
-KUrl KernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *) const
+KUrl KernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
 {
-    return KUrl();
+    KUrl buildDir(item->project()->projectItem()->url());
+    return buildDir;
 }
 
-KJob *KernelPlugin::install(KDevelop::ProjectBaseItem* item)
-{
-    return 0;
-}
-
-KJob *KernelPlugin::build(KDevelop::ProjectBaseItem *dom)
+KJob *KernelPlugin::install(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::clean(KDevelop::ProjectBaseItem *dom)
+KJob *KernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::configure(KDevelop::IProject*)
+KJob *KernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::prune(KDevelop::IProject*)
+KJob *KernelPlugin::configure(KDevelop::IProject *project)
+{
+    return 0;
+}
+
+KJob *KernelPlugin::prune(KDevelop::IProject *project)
 {
     return 0;
 }
