@@ -11,20 +11,32 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
 )
 
-set(kdev_kernel_plugin_SRCS
-    kernelplugin.cpp
+set(kdevkernel_plugin_SRCS
+    kdevkernelplugin.cpp
 )
 
 kde4_add_plugin(kdevkernel
-    ${kdev_kernel_plugin_SRCS})
-
+    ${kdevkernel_plugin_SRCS})
 target_link_libraries(kdevkernel
     ${KDEVPLATFORM_PROJECT_LIBRARIES}
     ${KDEVPLATFORM_INTERFACES_LIBRARIES}
 )
 
+set (kdevkernel_kcm_SRCS
+    kcm_kdevkernel.cpp
+#kdevkernelconfigwidget.cpp
+)
+
+#kde4_add_ui_files(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
+kde4_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
+
+#kde4_add_plugin(kcm_kdevkernel
+#${kdevkernel_kcm_SRCS})
+#target_link_libraries(kcm_kdevkernel ${KDE4_KIO_LIBS} ${KDEVPLATFORM_INTERFACES_LIBRARIES} ${KDEVPLATFORM_LANGUAGE_LIBRARIES} ${KDEVPLATFORM_PROJECT_LIBRARIES} ${KDEVPLATFORM_UTIL_LIBRARIES})
+
 install(
     TARGETS kdevkernel
+    #kcm_kdevkernel
     DESTINATION ${PLUGIN_INSTALL_DIR}
 )
 

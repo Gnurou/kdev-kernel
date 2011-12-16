@@ -1,0 +1,5 @@
+File=kcfg_kdevkernelconfig.kcfg
+ClassName=KDevKernelConfig
+Singleton=true
+Inherits=KDevelop::ProjectConfigSkeleton
+IncludeFiles=project/projectconfigskeleton.h

@@ -15,7 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernelplugin.h"
+#include "kdevkernelplugin.h"
+
 #include <interfaces/icore.h>
 #include <interfaces/iprojectcontroller.h>
 #include <interfaces/iproject.h>
@@ -26,12 +27,12 @@
 #include <KAboutData>
 #include <QObject>
 
-K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KernelPlugin>();)
+K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
 K_EXPORT_PLUGIN(KernelProjectFactory(
     KAboutData("kdevkernel","kdevkernel",
         ki18n("Kernel Project"),
         "0.1",
-        ki18n("Kernel Project Manager"),
+        ki18n("Linux Kernel Project Manager"),
         KAboutData::License_GPL,
         ki18n("Copyright (C) 2011 Alexandre Courbot <gnurou@gmail.com>"),
         KLocalizedString(),
@@ -40,7 +41,7 @@ K_EXPORT_PLUGIN(KernelProjectFactory(
     )
 ))
 
-KernelPlugin::KernelPlugin(QObject *parent, const QVariantList &args)
+KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     : KDevelop::AbstractFileManagerPlugin(KernelProjectFactory::componentData(), parent)
 {
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
@@ -48,77 +49,78 @@ KernelPlugin::KernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
 }
 
-KDevelop::IProjectBuilder *KernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
+KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
 {
     return 0;
 }
 
-KUrl::List KernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
+KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
     return KUrl::List();
 }
 
-QHash<QString,QString> KernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
+QHash<QString,QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
     QHash<QString, QString> defines;
     defines.insert("__KERNEL__", "1");
+    defines.insert("CONFIG_PM", "1");
     return defines;
 }
 
-KDevelop::ProjectTargetItem *KernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
+KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
 {
     return 0;
 }
 
-bool KernelPlugin::removeTarget(KDevelop::ProjectTargetItem *target)
+bool KDevKernelPlugin::removeTarget(KDevelop::ProjectTargetItem *target)
 {
     return false;
 }
 
-QList<KDevelop::ProjectTargetItem *> KernelPlugin::targets(KDevelop::ProjectFolderItem *item) const
+QList<KDevelop::ProjectTargetItem *> KDevKernelPlugin::targets(KDevelop::ProjectFolderItem *item) const
 {
     return QList<KDevelop::ProjectTargetItem *>();
 }
 
-bool KernelPlugin::addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target)
+bool KDevKernelPlugin::addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target)
 {
     return false;
 }
 
-bool KernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files)
+bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files)
 {
     return false;
 }
 
-KUrl KernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
+KUrl KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
 {
     KUrl buildDir(item->project()->projectItem()->url());
     return buildDir;
 }
 
-KJob *KernelPlugin::install(KDevelop::ProjectBaseItem *item)
+KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::build(KDevelop::ProjectBaseItem *item)
+KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::clean(KDevelop::ProjectBaseItem *item)
+KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
     return 0;
 }
 
-KJob *KernelPlugin::configure(KDevelop::IProject *project)
+KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 {
     return 0;
 }
 
-KJob *KernelPlugin::prune(KDevelop::IProject *project)
+KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 {
     return 0;
 }
 
-#include "kernelplugin.moc"
+#include "kdevkernelplugin.moc"

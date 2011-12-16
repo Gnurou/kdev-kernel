@@ -33,14 +33,14 @@ class ProjectFolderItem;
 class IProject;
 }
 
-class KernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDevelop::IBuildSystemManager, public KDevelop::IProjectBuilder
+class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDevelop::IBuildSystemManager, public KDevelop::IProjectBuilder
 {
     Q_OBJECT
     Q_INTERFACES(KDevelop::IProjectBuilder)
     Q_INTERFACES(KDevelop::IProjectFileManager)
     Q_INTERFACES(KDevelop::IBuildSystemManager)
 public:
-    KernelPlugin(QObject *parent, const QVariantList &args);
+    KDevKernelPlugin(QObject *parent, const QVariantList &args);
 
     // AbstractFileManagerPlugin interface
 
