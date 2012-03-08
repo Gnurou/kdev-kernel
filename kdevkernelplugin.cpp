@@ -46,7 +46,7 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
 {
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
-    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
 }
 
 KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
@@ -56,13 +56,19 @@ KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem
 
 KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
-    return KUrl::List();
+    KUrl::List ret;
+    KUrl projectRoot = item->project()->folder();
+    ret << KUrl(projectRoot, "include");
+    ret << KUrl(projectRoot, "arch/arm/include");
+    ret << KUrl(projectRoot, "arch/arm/mach-tegra/include");
+
+    return ret;
 }
 
 QHash<QString,QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
     QHash<QString, QString> defines;
-    defines.insert("__KERNEL__", "1");
+    defines.insert("__KERNEL__", "");
     defines.insert("CONFIG_PM", "1");
     return defines;
 }
