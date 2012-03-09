@@ -27,6 +27,9 @@
 #include <KAboutData>
 #include <QObject>
 
+#include <QFile>
+#include <QtDebug>
+
 K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
 K_EXPORT_PLUGIN(KernelProjectFactory(
     KAboutData("kdevkernel","kdevkernel",
@@ -51,7 +54,7 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
 
 KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
 {
-    return 0;
+    return (KDevelop::IProjectBuilder *)(this);
 }
 
 KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
@@ -71,6 +74,45 @@ QHash<QString,QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item
     defines.insert("__KERNEL__", "");
     defines.insert("CONFIG_PM", "1");
     return defines;
+}
+
+void KDevKernelPlugin::parseDotConfig(const QString &dotconfig)
+{
+}
+
+void KDevKernelPlugin::parseMakefiles()
+{
+    QString root = "/home/gnurou/Work/Linux/linux/";
+    parseMakefiles(root + "kernel/");
+}
+
+void KDevKernelPlugin::parseMakefiles(const QString &dir)
+{
+    QFile makefile(dir + "Makefile");
+    static QRegExp objy("obj-y[\t ]*\\+?=([^\\\\]+)\\\\?\n");
+    static QRegExp spTab("\t| ");
+
+    if (!makefile.exists() || !makefile.open(QIODevice::ReadOnly)) return;
+
+    QStringList files;
+    while (1) {
+        QString line(makefile.readLine());
+	if (line.isEmpty()) break;
+        if (objy.exactMatch(line)) {
+		files += objy.capturedTexts()[1].split(spTab, QString::SkipEmptyParts);
+		while (line.endsWith("\\\n")) {
+			line = makefile.readLine();
+			if (line.isEmpty()) break;
+			QString line2(line);
+			line2.remove("\\\n");
+			files += line2.split(spTab, QString::SkipEmptyParts);
+		}
+	}
+    }
+    qDebug() << "kernel files for" << dir << ":" << files;
+    foreach (const QString &file, files) {
+	    if (file.endsWith('/')) parseMakefiles(dir + file);
+    }
 }
 
 KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
@@ -98,6 +140,11 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
     return false;
 }
 
+bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const
+{
+    return true;
+}
+
 KUrl KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
 {
     KUrl buildDir(item->project()->projectItem()->url());
@@ -111,6 +158,7 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
+    parseMakefiles();
     return 0;
 }
 

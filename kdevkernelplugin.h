@@ -39,6 +39,19 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
     Q_INTERFACES(KDevelop::IProjectBuilder)
     Q_INTERFACES(KDevelop::IProjectFileManager)
     Q_INTERFACES(KDevelop::IBuildSystemManager)
+
+private:
+    /**
+     * Parse the given configuration file and set the kernel definitions accordingly.
+     */
+    void parseDotConfig(const QString &dotconfig);
+    /**
+     * Parse the Makefiles and build the list of files we need to include according
+     * to the definitions that have been parsed by parseDotConfig.
+     */
+    void parseMakefiles();
+    void parseMakefiles(const QString &dir);
+
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
 
@@ -53,6 +66,11 @@ public:
     virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *item) const;
     virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target);
     virtual bool removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files);
+    /**
+     * A file is valid if it belongs to the list of files that are enabled through the kernel configuration.
+     * A directory is valid if it contains any file we are interested in.
+     */
+    virtual bool isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const;
     virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *item) const;
 
     // IProjectBuilder interface
