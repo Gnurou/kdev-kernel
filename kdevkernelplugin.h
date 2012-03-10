@@ -22,6 +22,9 @@
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
 #include <QVariant>
+#include <QSet>
+#include <QMap>
+#include <QHash>
 
 class KJob;
 namespace KDevelop
@@ -41,21 +44,24 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
     Q_INTERFACES(KDevelop::IBuildSystemManager)
 
 private:
+    QMap<KDevelop::IProject *, QSet<KUrl> > _validFiles;
+    QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
+
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
      */
-    void parseDotConfig(const QString &dotconfig);
+    void parseDotConfig(const KUrl &dotconfig, QHash<QString, QString> &_defs);
     /**
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefiles();
-    void parseMakefiles(const QString &dir);
+    void parseMakefiles(const KUrl &dir, KDevelop::IProject *project);
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
 
     // AbstractFileManagerPlugin interface
+    virtual KDevelop::ProjectFolderItem *import(KDevelop::IProject *project);
 
     // IBuildSystemManager interface
     virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *item) const;
