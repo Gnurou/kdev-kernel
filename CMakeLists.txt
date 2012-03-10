@@ -1,7 +1,7 @@
 project(kdevkernel)
 
-find_package(KDE4 REQUIRED)
-find_package(KDevPlatform REQUIRED)
+find_package(KDE4 4.7.0 REQUIRED)
+find_package(KDevPlatform 1.2.60 REQUIRED)
 
 include_directories(
     ${KDE4_INCLUDES}
@@ -42,5 +42,6 @@ install(
 
 install(
     FILES kdevkernel.desktop
+    # kcm_kdevkernel.desktop
     DESTINATION ${SERVICES_INSTALL_DIR}
 )
