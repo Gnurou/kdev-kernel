@@ -18,16 +18,22 @@
 #ifndef KDEVKERNELCONFIGWIDGET_H
 #define KDEVKERNELCONFIGWIDGET_H
 
-#include <QWidget>
 #include <kconfiggroup.h>
 #include "ui_kdevkernelconfigwidget.h"
 
+#include <QWidget>
+#include <QString>
+
 class KConfig;
-class KConfigGroup;
 
 namespace KDevelop {
 class IProject;
 }
+
+#define KGROUP "Kernel"
+#define KBDIR "buildDir"
+#define KARCH "arch"
+#define KCROSS "crossPrefix"
 
 class KDevKernelConfigWidget : public QWidget, public Ui::KDevKernelConfigWidget {
 Q_OBJECT
@@ -36,6 +42,7 @@ public:
 	void loadFrom(KConfig *config);
 	void saveTo(KConfig *config, KDevelop::IProject *project);
 	void loadDefaults();
+
 signals:
 	void changed();
 };

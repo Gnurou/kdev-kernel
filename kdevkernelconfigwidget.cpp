@@ -35,11 +35,6 @@ void KDevKernelConfigWidget::loadDefaults()
 {
 }
 
-static const QString KGROUP("Kernel");
-static const QString KBDIR("buildDir");
-static const QString KARCH("arch");
-static const QString KCROSS("crossPrefix");
-
 void KDevKernelConfigWidget::loadFrom(KConfig* config)
 {
     KConfigGroup group(config->group(KGROUP));

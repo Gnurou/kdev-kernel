@@ -16,6 +16,7 @@
  */
 
 #include "kdevkernelplugin.h"
+#include "kdevkernelconfigwidget.h"
 
 #include <interfaces/icore.h>
 #include <interfaces/iprojectcontroller.h>
@@ -147,11 +148,18 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *project)
 {
     KUrl projectRoot(project->folder());
+    KUrl buildRoot;
     QHash<QString, QString> &_defs = _defines[project];
     _defs.clear();
     // Standard definitions
     _defs["__KERNEL__"] = "";
-    parseDotConfig(KUrl(projectRoot, ".config"), _defs);
+
+    KConfigGroup config(project->projectConfiguration()->group(KGROUP));
+    if (config.hasKey(KBDIR))
+	    buildRoot = config.readEntry(KBDIR, KUrl());
+    else buildRoot = projectRoot;
+    parseDotConfig(KUrl(buildRoot, ".config"), _defs);
+
     _validFiles[project].clear();
     parseMakefiles(KUrl(projectRoot, "init/"), project);
     parseMakefiles(KUrl(projectRoot, "sound/"), project);
@@ -165,6 +173,8 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     parseMakefiles(KUrl(projectRoot, "security/"), project);
     parseMakefiles(KUrl(projectRoot, "crypto/"), project);
     parseMakefiles(KUrl(projectRoot, "block/"), project);
+
+    // TODO parse arch/ files
 
     return AbstractFileManagerPlugin::import(project);
 }
