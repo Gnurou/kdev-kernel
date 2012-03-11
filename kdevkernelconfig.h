@@ -15,30 +15,16 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KCM_KDEVKERNEL_H
-#define KCM_KDEVKERNEL_H
+#ifndef KDEVKERNELCONFIG_H
+#define KDEVKERNELCONFIG_H
 
-#include <project/projectkcmodule.h>
-#include "kdevkernelplugin.h"
+#include <KUrl>
 
-class KDevKernelConfig;
-
-class KDevKernelKCModule : public ProjectKCModule<KDevKernelConfig>
-{
-Q_OBJECT
-public:
-	KDevKernelKCModule(QWidget *parent, const QVariantList &args = QVariantList());
-	virtual ~KDevKernelKCModule();
-
-	virtual void defaults();
-	virtual void save();
-	virtual void load();
-
-public slots:
-	void dataChanged();
-
-private:
-	class KDevKernelConfigWidget *configWidget;
+struct KDevKernelConfig {
+	KUrl sourceDir;
+	KUrl buildDir;
+	QString arch;
+	QString mach;
 };
 
 #endif

@@ -1,17 +1,16 @@
 [Desktop Entry]
 Type=Service
-Name=Linux Kernel
-Comment=Linux Kernel Tree Support
+Name=Linux Kernel Project Manager
+Comment=Project Manager for editing the Linux Kernel
 Icon=gear
 ServiceTypes=KDevelop/Plugin
 GenericName=KernelPlugin
 X-KDE-Library=kdevkernel
-X-KDE-PluginInfo-Name=kdevkernel
+X-KDE-PluginInfo-Name=KDevKernel
 X-KDE-PluginInfo-Author=Alexandre Courbot
 X-KDE-PluginInfo-Email=gnurou@gmail.com
 X-KDE-PluginInfo-License=GPL
 X-KDevelop-Version=14
-X-KDevelop-Category=Global
+X-KDevelop-Category=Project
 X-KDevelop-Interfaces=org.kdevelop.IProjectBuilder,org.kdevelop.IProjectFileManager,org.kdevelop.IBuildSystemManager
-X-KDevelop-Mode=GUI
-X-KDevelop-LoadMode=UserSelectable
+X-KDevelop-Mode=NoGUI

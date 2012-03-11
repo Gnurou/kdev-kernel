@@ -6,8 +6,8 @@ ServiceTypes=KCModule
 X-KDE-ModuleType=Library
 X-KDE-Library=kcm_kdevkernel
 X-KDE-ParentApp=kdevplatformproject
-X-KDE-ParentComponents=KDevKernelPlugin,KDevGenericManager
+X-KDE-ParentComponents=KDevKernel,KDevGenericManager
 X-KDE-CfgDlgHierarchy=BUILDTOOL
 
-Name=Linux Kernel Development Settings
+Name=Kernel Development Settings
 Comment=Configure Linux Kernel Development Settings

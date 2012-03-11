@@ -15,30 +15,29 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KCM_KDEVKERNEL_H
-#define KCM_KDEVKERNEL_H
+#include "kdevkernelconfigwidget.h"
 
-#include <project/projectkcmodule.h>
-#include "kdevkernelplugin.h"
-
-class KDevKernelConfig;
-
-class KDevKernelKCModule : public ProjectKCModule<KDevKernelConfig>
+KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget* parent) : QWidget(parent)
 {
-Q_OBJECT
-public:
-	KDevKernelKCModule(QWidget *parent, const QVariantList &args = QVariantList());
-	virtual ~KDevKernelKCModule();
+	Ui::KDevKernelConfigWidget::setupUi(this);
+}
 
-	virtual void defaults();
-	virtual void save();
-	virtual void load();
+void KDevKernelConfigWidget::loadDefaults()
+{
 
-public slots:
-	void dataChanged();
+}
 
-private:
-	class KDevKernelConfigWidget *configWidget;
-};
+void KDevKernelConfigWidget::loadFrom(KConfig* config)
+{
 
-#endif
+}
+
+void KDevKernelConfigWidget::saveConfig(KConfigGroup& group, KDevKernelConfig& config)
+{
+
+}
+
+void KDevKernelConfigWidget::saveTo(KConfig* config, KDevelop::IProject* project)
+{
+
+}

@@ -16,20 +16,49 @@
  */
 
 #include "kcm_kdevkernel.h"
-#include "kdevkernelsettings.h"
 
 #include <KPluginFactory>
 #include <QVBoxLayout>
 
+#include "kdevkernelconfigwidget.h"
 #include "kcfg_kdevkernelconfig.h"
 
 K_PLUGIN_FACTORY(KDevKernelKCModuleFactory, registerPlugin<KDevKernelKCModule>(); )
 K_EXPORT_PLUGIN(KDevKernelKCModuleFactory("kcm_kdevkernel", "kdevkernel"))
 
 KDevKernelKCModule::KDevKernelKCModule(QWidget *parent, const QVariantList &args)
-    : ProjectKCModule<KDevKernelSettings>(KDevKernelKCModuleFactory::componentData(), parent, args)
+    : ProjectKCModule<KDevKernelConfig>(KDevKernelKCModuleFactory::componentData(), parent, args)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
+    configWidget = new KDevKernelConfigWidget(this);
+    connect(configWidget, SIGNAL(changed()), SLOT(dataChanged()));
+    layout->addWidget(configWidget);
 
-    addConfig(KDevKernelSettings::self(), configWidget);
+    addConfig(KDevKernelConfig::self(), configWidget);
 }
+
+void KDevKernelKCModule::dataChanged()
+{
+    emit changed(true);
+}
+
+KDevKernelKCModule::~KDevKernelKCModule()
+{
+}
+
+void KDevKernelKCModule::defaults()
+{
+    KCModule::defaults();
+}
+
+void KDevKernelKCModule::save()
+{
+    KCModule::save();
+}
+
+void KDevKernelKCModule::load()
+{
+    KCModule::load();
+}
+
+#include "kcm_kdevkernel.moc"
