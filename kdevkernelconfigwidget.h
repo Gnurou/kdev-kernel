@@ -22,8 +22,6 @@
 #include <kconfiggroup.h>
 #include "ui_kdevkernelconfigwidget.h"
 
-class KDevKernelConfig;
-
 class KConfig;
 class KConfigGroup;
 
@@ -38,8 +36,8 @@ public:
 	void loadFrom(KConfig *config);
 	void saveTo(KConfig *config, KDevelop::IProject *project);
 	void loadDefaults();
-private:
-	void saveConfig(KConfigGroup &group, KDevKernelConfig &config);
+signals:
+	void changed();
 };
 
 #endif

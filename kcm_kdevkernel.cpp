@@ -49,16 +49,19 @@ KDevKernelKCModule::~KDevKernelKCModule()
 void KDevKernelKCModule::defaults()
 {
     KCModule::defaults();
+    configWidget->loadDefaults();
 }
 
 void KDevKernelKCModule::save()
 {
     KCModule::save();
+    configWidget->saveTo(KDevKernelConfig::self()->config(), project());
 }
 
 void KDevKernelKCModule::load()
 {
     KCModule::load();
+    configWidget->loadFrom(KDevKernelConfig::self()->config());
 }
 
 #include "kcm_kdevkernel.moc"

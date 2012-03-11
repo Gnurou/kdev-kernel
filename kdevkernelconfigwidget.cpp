@@ -17,27 +17,68 @@
 
 #include "kdevkernelconfigwidget.h"
 
+#include <KJob>
+#include <interfaces/icore.h>
+#include <interfaces/iprojectcontroller.h>
+#include <interfaces/iruncontroller.h>
+#include <language/backgroundparser/parseprojectjob.h>
+
 KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget* parent) : QWidget(parent)
 {
 	Ui::KDevKernelConfigWidget::setupUi(this);
+	connect(buildDir, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
+	connect(arch, SIGNAL(currentIndexChanged(int)), this, SIGNAL(changed()));
+	connect(crossCompiler, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
 }
 
 void KDevKernelConfigWidget::loadDefaults()
 {
-
 }
+
+static const QString KGROUP("Kernel");
+static const QString KBDIR("buildDir");
+static const QString KARCH("arch");
+static const QString KCROSS("crossPrefix");
 
 void KDevKernelConfigWidget::loadFrom(KConfig* config)
 {
-
-}
-
-void KDevKernelConfigWidget::saveConfig(KConfigGroup& group, KDevKernelConfig& config)
-{
-
+    KConfigGroup group(config->group(KGROUP));
+    if (group.hasKey(KBDIR)) {
+	    buildDir->setUrl(group.readEntry(KBDIR, KUrl()));
+    }
+    if (group.hasKey(KARCH)) {
+	    QString archStr(group.readEntry(KARCH, ""));
+	    arch->setCurrentItem(archStr);
+    }
+    if (group.hasKey(KCROSS)) {
+	    crossCompiler->setUrl(KUrl(group.readEntry(KCROSS, "") + "gcc"));
+    }
 }
 
 void KDevKernelConfigWidget::saveTo(KConfig* config, KDevelop::IProject* project)
 {
+    KConfigGroup group(config->group(KGROUP));
+    if (!buildDir->url().isEmpty())
+	    group.writeEntry(KBDIR, buildDir->url());
+    else group.deleteEntry(KBDIR);
+    if (arch->currentIndex() != 0)
+	    group.writeEntry(KARCH, arch->currentText());
+    else group.deleteEntry(KARCH);
+    if (!crossCompiler->url().isEmpty()) {
+	    QString cc(crossCompiler->url().toLocalFile());
+	    cc.remove("file://");
+	    if (cc.endsWith("gcc")) {
+		    QString crossPrefix(cc.mid(0, cc.size() - 3));
+		    group.writeEntry(KCROSS, crossPrefix);
+	    } else {
+		    // TODO notify error
+	    }
+    }
+    else group.deleteEntry(KCROSS);
 
+    config->sync();
+    if ( KDevelop::IProjectController::parseAllProjectSources()) {
+        KJob* parseProjectJob = new KDevelop::ParseProjectJob(project);
+        KDevelop::ICore::self()->runController()->registerJob(parseProjectJob);
+    }
 }
