@@ -43,3 +43,5 @@ install(
           kcm_kdevkernel.desktop
     DESTINATION ${SERVICES_INSTALL_DIR}
 )
+
+add_subdirectory(icons)

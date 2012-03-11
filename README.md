@@ -9,7 +9,6 @@ The raw KDevelop comes with extremely useful cross-reference and code parsing to
 - Some implicitly declared macros (like `__KERNEL__`) are needed for the code to be parsed correctly. Without them lots of functions and data structures will appear as undeclared.
 - A lot of the code (power management, SMP, etc) is conditionally compiled depending on the kernel configuration which is translated into more C defines. These defines are not seen by KDevelop and a huge part of relevant code is thus not parsed.
 - All the same, architecture-dependant code cannot be parsed without a proper configuration
-- KDevelop's parser is C++-oriented and does not support some of the C features used in the kernel like designated initializers.
 
 Features
 --------
@@ -22,6 +21,11 @@ Installing
 This plugin requires KDevelop 4.3 or higher.
 
 Just typing `cmake . && make && sudo make install` should be enough to have the project installed. Then in KDevelop, do "Project -> Open/Import Project..." and select the root Makefile of your Linux kernel. When prompted for the type of the project, choose "Linux Kernel".
+
+Limitations
+-----------
+
+- KDevelop's parser is C++-oriented and does not support some of the C features used in the kernel like designated initializers. This needs to be fixed upstream.
 
 Contribute & Feedback
 ---------------------

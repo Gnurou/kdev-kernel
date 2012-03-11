@@ -2,7 +2,7 @@
 Type=Service
 Name=Linux Kernel Project Manager
 Comment=Project Manager for editing the Linux Kernel
-Icon=gear
+Icon=linux
 ServiceTypes=KDevelop/Plugin
 GenericName=KernelPlugin
 X-KDE-Library=kdevkernel

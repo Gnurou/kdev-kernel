@@ -33,7 +33,7 @@
 K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
 K_EXPORT_PLUGIN(KernelProjectFactory(
     KAboutData("kdevkernel","kdevkernel",
-        ki18n("Kernel Project"),
+        ki18n("Linux Kernel"),
         "0.1",
         ki18n("Linux Kernel Project Manager"),
         KAboutData::License_GPL,

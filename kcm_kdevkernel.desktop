@@ -1,5 +1,5 @@
 [Desktop Entry]
-Icon=kdevelop
+Icon=linux
 Type=Service
 ServiceTypes=KCModule
 
@@ -9,5 +9,5 @@ X-KDE-ParentApp=kdevplatformproject
 X-KDE-ParentComponents=KDevKernel,KDevGenericManager
 X-KDE-CfgDlgHierarchy=BUILDTOOL
 
-Name=Kernel Development Settings
+Name=Linux Kernel
 Comment=Configure Linux Kernel Development Settings
