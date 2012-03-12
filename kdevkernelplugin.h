@@ -46,6 +46,7 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
 private:
     QMap<KDevelop::IProject *, QSet<KUrl> > _validFiles;
     QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
+    QMap<KDevelop::IProject *, QStringList> _machDirs;
 
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
@@ -66,6 +67,7 @@ public:
     // IBuildSystemManager interface
     virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *item) const;
     virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
+    virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
     virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *item) const;
     virtual KDevelop::ProjectTargetItem *createTarget(const QString& target, KDevelop::ProjectFolderItem *parent);
     virtual bool removeTarget(KDevelop::ProjectTargetItem *target);

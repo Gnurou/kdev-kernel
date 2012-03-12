@@ -62,11 +62,26 @@ KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem
 
 KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
+    return includeDirectories(item->project());
+}
+
+KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
+{
     KUrl::List ret;
-    KUrl projectRoot = item->project()->folder();
+    KUrl projectRoot = project->folder();
+    KConfigGroup config(project->projectConfiguration()->group(KGROUP));
+
+    // TODO cache for better efficiency - this should be built when loading a project
+    // or when config changes
     ret << KUrl(projectRoot, "include");
-    ret << KUrl(projectRoot, "arch/x86");
-    // TODO also include the mach include directory if it exists
+    if (config.hasKey(KARCH)) {
+	QString arch(config.readEntry(KARCH));
+	KUrl archUrl(projectRoot, "arch/");
+	ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
+	foreach (const QString &machDir, _machDirs[project]) {
+		ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
+	}
+    }
     // TODO /usr/include and such should not be looked for
 
     return ret;
@@ -137,8 +152,11 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 			}
 		} else if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
 			QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
-			foreach (const QString &pFile, pFiles)
-				files += (objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile + "/";
+			foreach (const QString &pFile, pFiles) {
+				QString pDir((objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile);
+				files += pDir + "/";
+				_machDirs[project] << pDir;
+			}
 		}
 	}
     }
@@ -157,6 +175,8 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     KUrl projectRoot(project->folder());
     KUrl buildRoot;
     QHash<QString, QString> &_defs = _defines[project];
+
+    _machDirs.clear();
     _defs.clear();
     // Standard definitions
     _defs["__KERNEL__"] = "";
@@ -235,8 +255,12 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     static QRegExp Kconf("/Kconfig($|\\.?)");
     qDebug() << "isValid" << url;
     QString lFile(url.toLocalFile());
-    // Files in include/ shall always be processed
-    if (lFile.startsWith(KUrl(project->folder(), "include/").toLocalFile())) return true;
+    // Files in include directories shall always be processed
+    // TODO cache the include dirs list, this is inefficient
+    KUrl::List includeDirs(includeDirectories(project));
+    foreach (const KUrl &iUrl, includeDirs) {
+	if (lFile.startsWith(iUrl.toLocalFile())) return true;
+    }
     // Documentation too
     if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) return true;
     // Same thing for .h files and Makefiles
