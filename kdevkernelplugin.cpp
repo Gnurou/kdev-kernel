@@ -101,7 +101,7 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
 
 void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project)
 {
-    static QRegExp objy("obj-([\\$\\(\\)\\w]+)[\t ]*\\+?=([^\\\\]+)\\\\?\n");
+    static QRegExp objy("(obj|machine|plat)-([\\$\\(\\)\\w]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
@@ -115,23 +115,30 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 	if (line.isEmpty()) break;
         if (objy.exactMatch(line)) {
 		bool addFiles = false;
-		QString y(objy.cap(1));
+		QString y(objy.cap(2));
 		if (y.startsWith("$(") && y.endsWith(")")) {
 			QString def(_defines[project][y.mid(2, y.size() - 3)]);
 			if (def == "1") y = "y";
 		}
 		if (y == "y") addFiles = true;
-		// Get multi-line definitions
-		if (addFiles) files += objy.cap(2).split(spTab, QString::SkipEmptyParts);
-		while (line.endsWith("\\\n")) {
-			line = makefile.readLine();
-			if (line.isEmpty()) break;
-			if (addFiles) {
-				QString line2(line);
-				line2.remove("\\\n");
-				line2.remove("\n");
-				files += line2.split(spTab, QString::SkipEmptyParts);
+		// Special handling for machine and plat cases
+		if (objy.cap(1) == "obj") {
+			// Get multi-line definitions
+			if (addFiles) files += objy.cap(3).split(spTab, QString::SkipEmptyParts);
+			while (line.endsWith("\\\n")) {
+				line = makefile.readLine();
+				if (line.isEmpty()) break;
+				if (addFiles) {
+					QString line2(line);
+					line2.remove("\\\n");
+					line2.remove("\n");
+					files += line2.split(spTab, QString::SkipEmptyParts);
+				}
 			}
+		} else if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
+			QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
+			foreach (const QString &pFile, pFiles)
+				files += (objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile + "/";
 		}
 	}
     }
@@ -158,9 +165,20 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     if (config.hasKey(KBDIR))
 	    buildRoot = config.readEntry(KBDIR, KUrl());
     else buildRoot = projectRoot;
+    buildRoot.adjustPath(KUrl::AddTrailingSlash);
     parseDotConfig(KUrl(buildRoot, ".config"), _defs);
 
     _validFiles[project].clear();
+
+    if (config.hasKey(KARCH)) {
+	    KUrl archUrl(projectRoot, "arch/");
+	    _validFiles[project] << archUrl;
+	    archUrl = KUrl(archUrl, config.readEntry(KARCH, "") + "/");
+	    _validFiles[project] << archUrl;
+	    parseMakefiles(archUrl, project);
+    }
+
+    // TODO can't we parse the root Makefile for that?
     parseMakefiles(KUrl(projectRoot, "init/"), project);
     parseMakefiles(KUrl(projectRoot, "sound/"), project);
     parseMakefiles(KUrl(projectRoot, "net/"), project);
@@ -174,7 +192,7 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     parseMakefiles(KUrl(projectRoot, "crypto/"), project);
     parseMakefiles(KUrl(projectRoot, "block/"), project);
 
-    // TODO parse arch/ files
+    parseMakefiles(KUrl(projectRoot, "drivers/"), project);
 
     return AbstractFileManagerPlugin::import(project);
 }
