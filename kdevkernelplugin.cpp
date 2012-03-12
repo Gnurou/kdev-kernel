@@ -116,7 +116,7 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
 
 void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project)
 {
-    static QRegExp objy("(obj|machine|plat)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
+    static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
@@ -128,6 +128,8 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     while (1) {
         QString line(makefile.readLine());
 	if (line.isEmpty()) break;
+	// USB core uses this
+	line.replace("usbcore-", "obj-");
         if (objy.exactMatch(line)) {
 		bool addFiles = false;
 		QString y(objy.cap(2));
@@ -139,7 +141,15 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 		}
 		if (y == "y") addFiles = true;
 		// Special handling for machine and plat cases
-		if (objy.cap(1) == "obj") {
+		// TODO merge common actions
+		if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
+			QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
+			foreach (const QString &pFile, pFiles) {
+				QString pDir((objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile);
+				files += pDir + "/";
+				_machDirs[project] << pDir;
+			}
+		} else {
 			// Get multi-line definitions
 			if (addFiles) files += objy.cap(3).split(spTab, QString::SkipEmptyParts);
 			while (line.endsWith("\\\n")) {
@@ -151,13 +161,6 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 					line2.remove("\n");
 					files += line2.split(spTab, QString::SkipEmptyParts);
 				}
-			}
-		} else if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
-			QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
-			foreach (const QString &pFile, pFiles) {
-				QString pDir((objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile);
-				files += pDir + "/";
-				_machDirs[project] << pDir;
 			}
 		}
 	}
@@ -202,6 +205,11 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     }
 
     // TODO can't we parse the root Makefile for that?
+    // TODO replace AbstractFileManager with our own to which
+    // valid files are directly added and parsed for includes
+    // TODO keep a list of "banned" (i.e. not obj-y) and allow
+    // parsing for all others? that would probably make more sense
+    // for files that are included from others.
     parseMakefiles(KUrl(projectRoot, "init/"), project);
     parseMakefiles(KUrl(projectRoot, "sound/"), project);
     parseMakefiles(KUrl(projectRoot, "net/"), project);
