@@ -116,7 +116,7 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
 
 void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project)
 {
-    static QRegExp objy("(obj|machine|plat)-([\\$\\(\\)\\w]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
+    static QRegExp objy("(obj|machine|plat)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
@@ -131,6 +131,8 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
         if (objy.exactMatch(line)) {
 		bool addFiles = false;
 		QString y(objy.cap(2));
+		y.replace("${", "$(");
+		y.replace("}", ")");
 		if (y.startsWith("$(") && y.endsWith(")")) {
 			QString def(_defines[project][y.mid(2, y.size() - 3)]);
 			if (def == "1") y = "y";
@@ -163,6 +165,7 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     foreach (QString file, files) {
 	    if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
 	    KUrl f(dir, file);
+	    qDebug() << "VALID FILE" << f;
 	    if (file.endsWith('/')) parseMakefiles(f, project);
 	    else _files << f;
     }
@@ -252,22 +255,29 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
 bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const
 {
     Q_UNUSED(isFolder)
+    bool valid = false;
     static QRegExp Kconf("/Kconfig($|\\.?)");
-    qDebug() << "isValid" << url;
+
     QString lFile(url.toLocalFile());
     // Files in include directories shall always be processed
     // TODO cache the include dirs list, this is inefficient
     KUrl::List includeDirs(includeDirectories(project));
     foreach (const KUrl &iUrl, includeDirs) {
-	if (lFile.startsWith(iUrl.toLocalFile())) return true;
+	if (lFile.startsWith(iUrl.toLocalFile())) {
+		valid = true;
+		break;
+	}
     }
+    if (valid);
     // Documentation too
-    if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) return true;
+    else if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) valid = true;
     // Same thing for .h files and Makefiles
-    if (lFile.endsWith(".h") || lFile.endsWith("/Makefile")) return true;
+    else if (lFile.endsWith(".h") || lFile.endsWith("/Makefile")) valid = true;
     // And KConfig files
-    if (lFile.contains(Kconf)) return true;
-    return _validFiles[project].contains(url);
+    else if (lFile.contains(Kconf)) valid = true;
+    else if (_validFiles[project].contains(url)) valid = true;
+    qDebug() << "isValid" << url << valid;
+    return valid;
 }
 
 KUrl KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
