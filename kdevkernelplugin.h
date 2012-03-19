@@ -65,7 +65,7 @@ public:
     virtual KDevelop::ProjectFolderItem *import(KDevelop::IProject *project);
 
     // IBuildSystemManager interface
-    virtual KDevelop::IProjectBuilder *builder(KDevelop::ProjectFolderItem *item) const;
+    virtual KDevelop::IProjectBuilder *builder() const;
     virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
     virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
     virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *item) const;

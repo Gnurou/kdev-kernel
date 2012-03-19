@@ -54,9 +54,8 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
 }
 
-KDevelop::IProjectBuilder *KDevKernelPlugin::builder(KDevelop::ProjectFolderItem *item) const
+KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
 {
-    Q_UNUSED(item);
     return (KDevelop::IProjectBuilder *)(this);
 }
 
