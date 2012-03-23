@@ -13,6 +13,7 @@ include_directories(
 
 set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
+    kernelbuildjob.cpp
 )
 
 kde4_add_plugin(kdevkernel
@@ -20,6 +21,8 @@ kde4_add_plugin(kdevkernel
 target_link_libraries(kdevkernel
     ${KDEVPLATFORM_PROJECT_LIBRARIES}
     ${KDEVPLATFORM_INTERFACES_LIBRARIES}
+    ${KDEVPLATFORM_UTIL_LIBRARIES}
+    ${KDEVPLATFORM_OUTPUTVIEW_LIBRARIES}
 )
 
 set (kdevkernel_kcm_SRCS
