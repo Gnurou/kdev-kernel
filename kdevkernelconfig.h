@@ -15,31 +15,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KDEVKERNELCONFIGWIDGET_H
-#define KDEVKERNELCONFIGWIDGET_H
+#ifndef KDEVKERNELCONFIG_H
+#define KDEVKERNELCONFIG_H
 
-#include <kconfiggroup.h>
-#include "ui_kdevkernelconfigwidget.h"
-
-#include <QWidget>
-#include <QString>
-
-class KConfig;
-
-namespace KDevelop {
-class IProject;
-}
-
-class KDevKernelConfigWidget : public QWidget, public Ui::KDevKernelConfigWidget {
-Q_OBJECT
-public:
-	KDevKernelConfigWidget(QWidget *parent = 0);
-	void loadFrom(KConfig *config);
-	void saveTo(KConfig *config, KDevelop::IProject *project);
-	void loadDefaults();
-
-signals:
-	void changed();
-};
+#define KERN_KGROUP "Kernel"
+#define KERN_BDIR "buildDir"
+#define KERN_ARCH "arch"
+#define KERN_CROSS "crossPrefix"
 
 #endif

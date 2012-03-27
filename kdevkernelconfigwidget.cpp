@@ -16,6 +16,7 @@
  */
 
 #include "kdevkernelconfigwidget.h"
+#include "kdevkernelconfig.h"
 
 #include <KJob>
 #include <interfaces/icore.h>
@@ -37,39 +38,39 @@ void KDevKernelConfigWidget::loadDefaults()
 
 void KDevKernelConfigWidget::loadFrom(KConfig* config)
 {
-    KConfigGroup group(config->group(KGROUP));
-    if (group.hasKey(KBDIR)) {
-	    buildDir->setUrl(group.readEntry(KBDIR, KUrl()));
+    KConfigGroup group(config->group(KERN_KGROUP));
+    if (group.hasKey(KERN_BDIR)) {
+	    buildDir->setUrl(group.readEntry(KERN_BDIR, KUrl()));
     }
-    if (group.hasKey(KARCH)) {
-	    QString archStr(group.readEntry(KARCH, ""));
+    if (group.hasKey(KERN_ARCH)) {
+	    QString archStr(group.readEntry(KERN_ARCH, ""));
 	    arch->setCurrentItem(archStr);
     }
-    if (group.hasKey(KCROSS)) {
-	    crossCompiler->setUrl(KUrl(group.readEntry(KCROSS, "") + "gcc"));
+    if (group.hasKey(KERN_CROSS)) {
+	    crossCompiler->setUrl(KUrl(group.readEntry(KERN_CROSS, "") + "gcc"));
     }
 }
 
 void KDevKernelConfigWidget::saveTo(KConfig* config, KDevelop::IProject* project)
 {
-    KConfigGroup group(config->group(KGROUP));
+    KConfigGroup group(config->group(KERN_KGROUP));
     if (!buildDir->url().isEmpty())
-	    group.writeEntry(KBDIR, buildDir->url());
-    else group.deleteEntry(KBDIR);
+	    group.writeEntry(KERN_BDIR, buildDir->url());
+    else group.deleteEntry(KERN_BDIR);
     if (arch->currentIndex() != 0)
-	    group.writeEntry(KARCH, arch->currentText());
-    else group.deleteEntry(KARCH);
+	    group.writeEntry(KERN_ARCH, arch->currentText());
+    else group.deleteEntry(KERN_ARCH);
     if (!crossCompiler->url().isEmpty()) {
 	    QString cc(crossCompiler->url().toLocalFile());
 	    cc.remove("file://");
 	    if (cc.endsWith("gcc")) {
 		    QString crossPrefix(cc.mid(0, cc.size() - 3));
-		    group.writeEntry(KCROSS, crossPrefix);
+		    group.writeEntry(KERN_CROSS, crossPrefix);
 	    } else {
 		    // TODO notify error
 	    }
     }
-    else group.deleteEntry(KCROSS);
+    else group.deleteEntry(KERN_CROSS);
 
     config->sync();
     if ( KDevelop::IProjectController::parseAllProjectSources()) {

@@ -17,24 +17,64 @@
 
 #include "kernelbuildjob.h"
 #include "kdevkernelplugin.h"
+#include "kdevkernelconfig.h"
 
 #include <KLocale>
 #include <outputview/outputmodel.h>
 #include <util/commandexecutor.h>
+#include <project/projectmodel.h>
+#include <interfaces/iproject.h>
+#include <KConfigGroup>
 
-KernelBuildJob::KernelBuildJob(KDevKernelPlugin *plugin) : OutputJob(plugin)
+KernelBuildJob::KernelBuildJob(KDevelop::ProjectBaseItem *item, KernelBuildJob::ActionType t) : OutputJob(), type(t)
 {
+    setCapabilities(Killable);
+    project = item->project();
+    setTitle(QString("%1 %2").arg("make").arg(item->text()));
+    setObjectName(QString("%1 %2").arg("make").arg(item->text()));
 }
 
 void KernelBuildJob::start()
 {
+    setStandardToolView(KDevelop::IOutputView::BuildView);
+    setBehaviours(KDevelop::IOutputView::AllowUserClose | KDevelop::IOutputView::AutoScroll);
+    KDevelop::OutputModel* model = new KDevelop::OutputModel(this);
+    setModel(model, KDevelop::IOutputView::TakeOwnership);
+    startOutput();
+
     exec = new KDevelop::CommandExecutor("make", this);
-    //exec->setArguments();
-    //exec->setEnvironment();
-    //exec->setWorkingDirectory();
+    QStringList args;
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+
+    args << QString("ARCH=%1").arg(config.readEntry(KERN_ARCH, "x86"));
+    if (config.hasKey(KERN_CROSS)) {
+        args << QString("CROSS_COMPILE=%1").arg(config.readEntry(KERN_CROSS, ""));
+    }
+    if (config.hasKey(KERN_BDIR)) {
+        args << QString("O=%1").arg(KUrl(config.readEntry(KERN_BDIR, "")).toLocalFile());
+    }
+
+    switch (type) {
+    case SelectConfig:
+        break;
+    case Build:
+        break;
+    case Configure:
+        args << "xconfig";
+        break;
+    }
+
+    exec->setArguments(args);
+    exec->setWorkingDirectory(project->projectItem()->url().toLocalFile());
 
     connect(exec, SIGNAL(completed()), SLOT(onFinished()));
     connect(exec, SIGNAL(failed(QProcess::ProcessError)), SLOT(onError(QProcess::ProcessError)));
+
+    connect(exec, SIGNAL(receivedStandardOutput(QStringList)), model, SLOT(appendLines(QStringList)));
+    connect(exec, SIGNAL(receivedStandardError(QStringList)), model, SLOT(appendLines(QStringList)));
+
+    model->appendLine(QString("%1 %2").arg("make").arg(args.join(" ")));
+    exec->start();
 }
 
 bool KernelBuildJob::doKill()
@@ -60,16 +100,18 @@ void KernelBuildJob::onError(QProcess::ProcessError error)
 
     switch (error) {
         case QProcess::FailedToStart:
+            setError(QProcess::FailedToStart);
             setErrorText(i18n("Failed to start command"));
             break;
         case QProcess::Crashed:
+            setError(QProcess::Crashed);
             setErrorText(i18n("Command crashed"));
             break;
         default:
+            setError(QProcess::UnknownError);
             setErrorText(i18n("Unknown error"));
             break;
     }
-
     emitResult();
 }
 

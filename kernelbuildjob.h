@@ -27,13 +27,16 @@ namespace KDevelop
 {
 class OutputModel;
 class CommandExecutor;
+class ProjectBaseItem;
+class IProject;
 }
 
 class KernelBuildJob : public KDevelop::OutputJob
 {
 Q_OBJECT
 public:
-    KernelBuildJob(KDevKernelPlugin *plugin);
+    enum ActionType { SelectConfig, Configure, Build };
+    KernelBuildJob(KDevelop::ProjectBaseItem *item, ActionType t);
 
     virtual void start();
     virtual  bool doKill();
@@ -44,8 +47,9 @@ private slots:
 
 private:
     KDevelop::OutputModel *model();
-
     KDevelop::CommandExecutor *exec;
+    ActionType type;
+    KDevelop::IProject *project;
 };
 
 #endif

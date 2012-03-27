@@ -17,6 +17,8 @@
 
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfigwidget.h"
+#include "kdevkernelconfig.h"
+#include "kernelbuildjob.h"
 
 #include <interfaces/icore.h>
 #include <interfaces/iprojectcontroller.h>
@@ -68,13 +70,13 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
 {
     KUrl::List ret;
     KUrl projectRoot = project->folder();
-    KConfigGroup config(project->projectConfiguration()->group(KGROUP));
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
 
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
     ret << KUrl(projectRoot, "include");
-    if (config.hasKey(KARCH)) {
-	QString arch(config.readEntry(KARCH));
+    if (config.hasKey(KERN_ARCH)) {
+	QString arch(config.readEntry(KERN_ARCH));
 	KUrl archUrl(projectRoot, "arch/");
 	ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
 	foreach (const QString &machDir, _machDirs[project]) {
@@ -186,19 +188,19 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     // Standard definitions
     _defs["__KERNEL__"] = "";
 
-    KConfigGroup config(project->projectConfiguration()->group(KGROUP));
-    if (config.hasKey(KBDIR))
-	    buildRoot = config.readEntry(KBDIR, KUrl());
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    if (config.hasKey(KERN_BDIR))
+	    buildRoot = config.readEntry(KERN_BDIR, KUrl());
     else buildRoot = projectRoot;
     buildRoot.adjustPath(KUrl::AddTrailingSlash);
     parseDotConfig(KUrl(buildRoot, ".config"), _defs);
 
     _validFiles[project].clear();
 
-    if (config.hasKey(KARCH)) {
+    if (config.hasKey(KERN_ARCH)) {
 	    KUrl archUrl(projectRoot, "arch/");
 	    _validFiles[project] << archUrl;
-	    archUrl = KUrl(archUrl, config.readEntry(KARCH, "") + "/");
+	    archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, "") + "/");
 	    _validFiles[project] << archUrl;
 	    parseMakefiles(archUrl, project);
     }
@@ -301,8 +303,7 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
-    Q_UNUSED(item)
-    return 0;
+    return new KernelBuildJob(item, KernelBuildJob::Build);
 }
 
 KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
@@ -313,8 +314,7 @@ KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 {
-    Q_UNUSED(project)
-    return 0;
+    return new KernelBuildJob(project->projectItem(), KernelBuildJob::Configure);
 }
 
 KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
