@@ -68,8 +68,8 @@ public:
     virtual KDevelop::IProjectBuilder *builder() const;
     virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
     virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
-    virtual QHash<QString,QString> defines(KDevelop::ProjectBaseItem *item) const;
-    virtual KDevelop::ProjectTargetItem *createTarget(const QString& target, KDevelop::ProjectFolderItem *parent);
+    virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const;
+    virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent);
     virtual bool removeTarget(KDevelop::ProjectTargetItem *target);
     virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *item) const;
     virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target);
@@ -82,7 +82,7 @@ public:
     virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *item) const;
 
     // IProjectBuilder interface
-    virtual KJob *install(KDevelop::ProjectBaseItem* item);
+    virtual KJob *install(KDevelop::ProjectBaseItem *item);
     virtual KJob *build(KDevelop::ProjectBaseItem *item);
     virtual KJob *clean(KDevelop::ProjectBaseItem *item);
     virtual KJob *configure(KDevelop::IProject *item);

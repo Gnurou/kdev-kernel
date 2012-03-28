@@ -29,7 +29,7 @@ K_EXPORT_PLUGIN(KDevKernelKCModuleFactory("kcm_kdevkernel", "kdevkernel"))
 KDevKernelKCModule::KDevKernelKCModule(QWidget *parent, const QVariantList &args)
     : ProjectKCModule<KDevKernelConfig>(KDevKernelKCModuleFactory::componentData(), parent, args)
 {
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
     configWidget = new KDevKernelConfigWidget(this);
     connect(configWidget, SIGNAL(changed()), SLOT(dataChanged()));
     layout->addWidget(configWidget);

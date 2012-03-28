@@ -24,57 +24,64 @@
 #include <interfaces/iruncontroller.h>
 #include <language/backgroundparser/parseprojectjob.h>
 
-KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget* parent) : QWidget(parent)
+KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget *parent) : QWidget(parent)
 {
-	Ui::KDevKernelConfigWidget::setupUi(this);
-	connect(buildDir, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
-	connect(arch, SIGNAL(currentIndexChanged(int)), this, SIGNAL(changed()));
-	connect(crossCompiler, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
+    Ui::KDevKernelConfigWidget::setupUi(this);
+    connect(buildDir, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
+    connect(arch, SIGNAL(currentIndexChanged(int)), this, SIGNAL(changed()));
+    connect(crossCompiler, SIGNAL(textChanged(const QString &)), this, SIGNAL(changed()));
 }
 
 void KDevKernelConfigWidget::loadDefaults()
 {
 }
 
-void KDevKernelConfigWidget::loadFrom(KConfig* config)
+void KDevKernelConfigWidget::loadFrom(KConfig *config)
 {
     KConfigGroup group(config->group(KERN_KGROUP));
+
     if (group.hasKey(KERN_BDIR)) {
-	    buildDir->setUrl(group.readEntry(KERN_BDIR, KUrl()));
+        buildDir->setUrl(group.readEntry(KERN_BDIR, KUrl()));
     }
+
     if (group.hasKey(KERN_ARCH)) {
-	    QString archStr(group.readEntry(KERN_ARCH, ""));
-	    arch->setCurrentItem(archStr);
+        QString archStr(group.readEntry(KERN_ARCH, ""));
+        arch->setCurrentItem(archStr);
     }
+
     if (group.hasKey(KERN_CROSS)) {
-	    crossCompiler->setUrl(KUrl(group.readEntry(KERN_CROSS, "") + "gcc"));
+        crossCompiler->setUrl(KUrl(group.readEntry(KERN_CROSS, "") + "gcc"));
     }
 }
 
-void KDevKernelConfigWidget::saveTo(KConfig* config, KDevelop::IProject* project)
+void KDevKernelConfigWidget::saveTo(KConfig *config, KDevelop::IProject *project)
 {
     KConfigGroup group(config->group(KERN_KGROUP));
+
     if (!buildDir->url().isEmpty())
-	    group.writeEntry(KERN_BDIR, buildDir->url());
+        group.writeEntry(KERN_BDIR, buildDir->url());
     else group.deleteEntry(KERN_BDIR);
+
     if (arch->currentIndex() != 0)
-	    group.writeEntry(KERN_ARCH, arch->currentText());
+        group.writeEntry(KERN_ARCH, arch->currentText());
     else group.deleteEntry(KERN_ARCH);
+
     if (!crossCompiler->url().isEmpty()) {
-	    QString cc(crossCompiler->url().toLocalFile());
-	    cc.remove("file://");
-	    if (cc.endsWith("gcc")) {
-		    QString crossPrefix(cc.mid(0, cc.size() - 3));
-		    group.writeEntry(KERN_CROSS, crossPrefix);
-	    } else {
-		    // TODO notify error
-	    }
-    }
-    else group.deleteEntry(KERN_CROSS);
+        QString cc(crossCompiler->url().toLocalFile());
+        cc.remove("file://");
+
+        if (cc.endsWith("gcc")) {
+            QString crossPrefix(cc.mid(0, cc.size() - 3));
+            group.writeEntry(KERN_CROSS, crossPrefix);
+        } else {
+            // TODO notify error
+        }
+    } else group.deleteEntry(KERN_CROSS);
 
     config->sync();
+
     if ( KDevelop::IProjectController::parseAllProjectSources()) {
-        KJob* parseProjectJob = new KDevelop::ParseProjectJob(project);
+        KJob *parseProjectJob = new KDevelop::ParseProjectJob(project);
         KDevelop::ICore::self()->runController()->registerJob(parseProjectJob);
     }
 }

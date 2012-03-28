@@ -26,20 +26,22 @@
 
 class KConfig;
 
-namespace KDevelop {
+namespace KDevelop
+{
 class IProject;
 }
 
-class KDevKernelConfigWidget : public QWidget, public Ui::KDevKernelConfigWidget {
-Q_OBJECT
+class KDevKernelConfigWidget : public QWidget, public Ui::KDevKernelConfigWidget
+{
+    Q_OBJECT
 public:
-	KDevKernelConfigWidget(QWidget *parent = 0);
-	void loadFrom(KConfig *config);
-	void saveTo(KConfig *config, KDevelop::IProject *project);
-	void loadDefaults();
+    KDevKernelConfigWidget(QWidget *parent = 0);
+    void loadFrom(KConfig *config);
+    void saveTo(KConfig *config, KDevelop::IProject *project);
+    void loadDefaults();
 
 signals:
-	void changed();
+    void changed();
 };
 
 #endif

@@ -35,17 +35,17 @@
 
 K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
 K_EXPORT_PLUGIN(KernelProjectFactory(
-    KAboutData("kdevkernel","kdevkernel",
-        ki18n("Linux Kernel"),
-        "0.1",
-        ki18n("Linux Kernel Project Manager"),
-        KAboutData::License_GPL,
-        ki18n("Copyright (C) 2011/2012 Alexandre Courbot <gnurou@gmail.com>"),
-        KLocalizedString(),
-        "",
-        "gnurou@gmail.com"
-    )
-))
+                    KAboutData("kdevkernel", "kdevkernel",
+                               ki18n("Linux Kernel"),
+                               "0.1",
+                               ki18n("Linux Kernel Project Manager"),
+                               KAboutData::License_GPL,
+                               ki18n("Copyright (C) 2011/2012 Alexandre Courbot <gnurou@gmail.com>"),
+                               KLocalizedString(),
+                               "",
+                               "gnurou@gmail.com"
+                              )
+                ))
 
 KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     : KDevelop::AbstractFileManagerPlugin(KernelProjectFactory::componentData(), parent)
@@ -55,7 +55,7 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
 
-    connect(core()->projectController(), SIGNAL(projectClosing(KDevelop::IProject*)), this, SLOT(projectClosing(KDevelop::IProject*)));
+    connect(core()->projectController(), SIGNAL(projectClosing(KDevelop::IProject *)), this, SLOT(projectClosing(KDevelop::IProject *)));
 }
 
 KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
@@ -77,20 +77,22 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
     ret << KUrl(projectRoot, "include");
+
     if (config.hasKey(KERN_ARCH)) {
-	QString arch(config.readEntry(KERN_ARCH));
-	KUrl archUrl(projectRoot, "arch/");
-	ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
-	foreach (const QString &machDir, _machDirs[project]) {
-		ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
-	}
+        QString arch(config.readEntry(KERN_ARCH));
+        KUrl archUrl(projectRoot, "arch/");
+        ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
+        foreach (const QString & machDir, _machDirs[project]) {
+            ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
+        }
     }
+
     // TODO /usr/include and such should not be looked for
 
     return ret;
 }
 
-QHash<QString,QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
+QHash<QString, QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
     return _defines[item->project()];
 }
@@ -101,19 +103,25 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     static QRegExp def("(\\w+)=(\"?[^\\n]+\"?)\n?");
 
     qDebug() << "kernel dotconfig" << dotconfig;
+
     if (!dfile.exists() || !dfile.open(QIODevice::ReadOnly)) return;
 
     while (1) {
         QString line(dfile.readLine());
-	if (line.isEmpty()) break;
-	if (!def.exactMatch(line)) continue;
-	QString key(def.cap(1));
-	QString val(def.cap(2));
-	if (val == "y") val = "1";
-	else if (val == "n") val = "0";
-	else if (val.startsWith('"') && val.endsWith('"')) val = val.mid(1, val.size() - 2);
-	qDebug() << "kernel def:" << key << val;
-	_defs[key] = val;
+
+        if (line.isEmpty()) break;
+
+        if (!def.exactMatch(line)) continue;
+
+        QString key(def.cap(1));
+        QString val(def.cap(2));
+
+        if (val == "y") val = "1";
+        else if (val == "n") val = "0";
+        else if (val.startsWith('"') && val.endsWith('"')) val = val.mid(1, val.size() - 2);
+
+        qDebug() << "kernel def:" << key << val;
+        _defs[key] = val;
     }
 }
 
@@ -128,51 +136,65 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     if (!makefile.exists() || !makefile.open(QIODevice::ReadOnly)) return;
 
     QStringList files;
+
     while (1) {
         QString line(makefile.readLine());
-	if (line.isEmpty()) break;
+
+        if (line.isEmpty()) break;
+
         if (objy.exactMatch(line)) {
-		bool addFiles = false;
-		QString y(objy.cap(2));
-		y.replace("${", "$(");
-		y.replace("}", ")");
-		if (y.startsWith("$(") && y.endsWith(")")) {
-			QString def(_defines[project][y.mid(2, y.size() - 3)]);
-			if (def == "1") y = "y";
-		}
-		if (y == "y" || y == "objs") addFiles = true;
-		// Special handling for machine and plat cases
-		// TODO merge common actions
-		if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
-			QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
-			foreach (const QString &pFile, pFiles) {
-				QString pDir((objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile);
-				files += pDir + "/";
-				_machDirs[project] << pDir;
-			}
-		} else {
-			// Get multi-line definitions
-			if (addFiles) files += objy.cap(3).split(spTab, QString::SkipEmptyParts);
-			while (line.endsWith("\\\n")) {
-				line = makefile.readLine();
-				if (line.isEmpty()) break;
-				if (addFiles) {
-					QString line2(line);
-					line2.remove("\\\n");
-					line2.remove("\n");
-					files += line2.split(spTab, QString::SkipEmptyParts);
-				}
-			}
-		}
-	}
+            bool addFiles = false;
+            QString y(objy.cap(2));
+            y.replace("${", "$(");
+            y.replace("}", ")");
+
+            if (y.startsWith("$(") && y.endsWith(")")) {
+                QString def(_defines[project][y.mid(2, y.size() - 3)]);
+
+                if (def == "1") y = "y";
+            }
+
+            if (y == "y" || y == "objs") addFiles = true;
+
+            // Special handling for machine and plat cases
+            // TODO merge common actions
+            if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
+                QStringList pFiles(objy.cap(3).split(spTab, QString::SkipEmptyParts));
+                foreach (const QString & pFile, pFiles) {
+                    QString pDir((objy.cap(1) == "machine" ? "mach-" : "plat-") + pFile);
+                    files += pDir + "/";
+                    _machDirs[project] << pDir;
+                }
+            } else {
+                // Get multi-line definitions
+                if (addFiles) files += objy.cap(3).split(spTab, QString::SkipEmptyParts);
+
+                while (line.endsWith("\\\n")) {
+                    line = makefile.readLine();
+
+                    if (line.isEmpty()) break;
+
+                    if (addFiles) {
+                        QString line2(line);
+                        line2.remove("\\\n");
+                        line2.remove("\n");
+                        files += line2.split(spTab, QString::SkipEmptyParts);
+                    }
+                }
+            }
+        }
     }
+
     foreach (QString file, files) {
-	    if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
-	    KUrl f(dir, file);
-	    qDebug() << "VALID FILE" << f;
-	    if (file.endsWith('/')) parseMakefiles(f, project);
-	    else _files << f;
+        if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
+
+        KUrl f(dir, file);
+        qDebug() << "VALID FILE" << f;
+
+        if (file.endsWith('/')) parseMakefiles(f, project);
+        else _files << f;
     }
+
     if (!files.isEmpty()) _files << dir;
 }
 
@@ -190,20 +212,22 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     _defs["__KERNEL__"] = "";
 
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+
     if (config.hasKey(KERN_BDIR))
-	    buildRoot = config.readEntry(KERN_BDIR, KUrl());
+        buildRoot = config.readEntry(KERN_BDIR, KUrl());
     else buildRoot = projectRoot;
+
     buildRoot.adjustPath(KUrl::AddTrailingSlash);
     parseDotConfig(KUrl(buildRoot, ".config"), _defs);
 
     _validFiles[project].clear();
 
     if (config.hasKey(KERN_ARCH)) {
-	    KUrl archUrl(projectRoot, "arch/");
-	    _validFiles[project] << archUrl;
-	    archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, "") + "/");
-	    _validFiles[project] << archUrl;
-	    parseMakefiles(archUrl, project);
+        KUrl archUrl(projectRoot, "arch/");
+        _validFiles[project] << archUrl;
+        archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, "") + "/");
+        _validFiles[project] << archUrl;
+        parseMakefiles(archUrl, project);
     }
 
     /*
@@ -237,7 +261,7 @@ void KDevKernelPlugin::projectClosing (KDevelop::IProject *project)
     _defines.remove(project);
 }
 
-KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
+KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString &target, KDevelop::ProjectFolderItem *parent)
 {
     Q_UNUSED(target);
     Q_UNUSED(parent);
@@ -279,12 +303,13 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     // Files in include directories shall always be processed
     // TODO cache the include dirs list, this is inefficient
     KUrl::List includeDirs(includeDirectories(project));
-    foreach (const KUrl &iUrl, includeDirs) {
-	if (lFile.startsWith(iUrl.toLocalFile())) {
-		valid = true;
-		break;
-	}
+    foreach (const KUrl & iUrl, includeDirs) {
+        if (lFile.startsWith(iUrl.toLocalFile())) {
+            valid = true;
+            break;
+        }
     }
+
     if (valid);
     // Documentation too
     else if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) valid = true;
@@ -293,6 +318,7 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     // And KConfig files
     else if (lFile.contains(Kconf)) valid = true;
     else if (_validFiles[project].contains(url)) valid = true;
+
     qDebug() << "isValid" << url << valid;
     return valid;
 }

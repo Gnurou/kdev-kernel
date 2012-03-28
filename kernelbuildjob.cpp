@@ -38,7 +38,7 @@ void KernelBuildJob::start()
 {
     setStandardToolView(KDevelop::IOutputView::BuildView);
     setBehaviours(KDevelop::IOutputView::AllowUserClose | KDevelop::IOutputView::AutoScroll);
-    KDevelop::OutputModel* model = new KDevelop::OutputModel(this);
+    KDevelop::OutputModel *model = new KDevelop::OutputModel(this);
     setModel(model, KDevelop::IOutputView::TakeOwnership);
     startOutput();
 
@@ -47,9 +47,11 @@ void KernelBuildJob::start()
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
 
     args << QString("ARCH=%1").arg(config.readEntry(KERN_ARCH, "x86"));
+
     if (config.hasKey(KERN_CROSS)) {
         args << QString("CROSS_COMPILE=%1").arg(config.readEntry(KERN_CROSS, ""));
     }
+
     if (config.hasKey(KERN_BDIR)) {
         args << QString("O=%1").arg(KUrl(config.readEntry(KERN_BDIR, "")).toLocalFile());
     }
@@ -83,7 +85,7 @@ bool KernelBuildJob::doKill()
     return true;
 }
 
-KDevelop::OutputModel* KernelBuildJob::model()
+KDevelop::OutputModel *KernelBuildJob::model()
 {
     return qobject_cast<KDevelop::OutputModel *>(OutputJob::model());
 }
@@ -99,19 +101,20 @@ void KernelBuildJob::onError(QProcess::ProcessError error)
     setError(error);
 
     switch (error) {
-        case QProcess::FailedToStart:
-            setError(QProcess::FailedToStart);
-            setErrorText(i18n("Failed to start command"));
-            break;
-        case QProcess::Crashed:
-            setError(QProcess::Crashed);
-            setErrorText(i18n("Command crashed"));
-            break;
-        default:
-            setError(QProcess::UnknownError);
-            setErrorText(i18n("Unknown error"));
-            break;
+    case QProcess::FailedToStart:
+        setError(QProcess::FailedToStart);
+        setErrorText(i18n("Failed to start command"));
+        break;
+    case QProcess::Crashed:
+        setError(QProcess::Crashed);
+        setErrorText(i18n("Command crashed"));
+        break;
+    default:
+        setError(QProcess::UnknownError);
+        setErrorText(i18n("Unknown error"));
+        break;
     }
+
     emitResult();
 }
 

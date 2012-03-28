@@ -25,20 +25,20 @@ class KDevKernelConfig;
 
 class KDevKernelKCModule : public ProjectKCModule<KDevKernelConfig>
 {
-Q_OBJECT
+    Q_OBJECT
 public:
-	KDevKernelKCModule(QWidget *parent, const QVariantList &args = QVariantList());
-	virtual ~KDevKernelKCModule();
+    KDevKernelKCModule(QWidget *parent, const QVariantList &args = QVariantList());
+    virtual ~KDevKernelKCModule();
 
-	virtual void defaults();
-	virtual void save();
-	virtual void load();
+    virtual void defaults();
+    virtual void save();
+    virtual void load();
 
 public slots:
-	void dataChanged();
+    void dataChanged();
 
 private:
-	class KDevKernelConfigWidget *configWidget;
+    class KDevKernelConfigWidget *configWidget;
 };
 
 #endif

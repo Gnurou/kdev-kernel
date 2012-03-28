@@ -33,7 +33,7 @@ class IProject;
 
 class KernelBuildJob : public KDevelop::OutputJob
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     enum ActionType { SelectConfig, Configure, Build };
     KernelBuildJob(KDevelop::ProjectBaseItem *item, ActionType t);
