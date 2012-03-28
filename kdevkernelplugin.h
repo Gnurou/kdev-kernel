@@ -87,6 +87,9 @@ public:
     virtual KJob *clean(KDevelop::ProjectBaseItem *item);
     virtual KJob *configure(KDevelop::IProject *item);
     virtual KJob *prune(KDevelop::IProject *item);
+
+private slots:
+    void projectClosing(KDevelop::IProject *project);
 };
 
 #endif

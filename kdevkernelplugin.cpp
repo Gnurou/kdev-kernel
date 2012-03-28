@@ -40,7 +40,7 @@ K_EXPORT_PLUGIN(KernelProjectFactory(
         "0.1",
         ki18n("Linux Kernel Project Manager"),
         KAboutData::License_GPL,
-        ki18n("Copyright (C) 2011 Alexandre Courbot <gnurou@gmail.com>"),
+        ki18n("Copyright (C) 2011/2012 Alexandre Courbot <gnurou@gmail.com>"),
         KLocalizedString(),
         "",
         "gnurou@gmail.com"
@@ -54,6 +54,8 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
+
+    connect(core()->projectController(), SIGNAL(projectClosing(KDevelop::IProject*)), this, SLOT(projectClosing(KDevelop::IProject*)));
 }
 
 KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
@@ -129,8 +131,6 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     while (1) {
         QString line(makefile.readLine());
 	if (line.isEmpty()) break;
-	// USB core uses this
-	line.replace("usbcore-", "obj-");
         if (objy.exactMatch(line)) {
 		bool addFiles = false;
 		QString y(objy.cap(2));
@@ -140,7 +140,7 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
 			QString def(_defines[project][y.mid(2, y.size() - 3)]);
 			if (def == "1") y = "y";
 		}
-		if (y == "y") addFiles = true;
+		if (y == "y" || y == "objs") addFiles = true;
 		// Special handling for machine and plat cases
 		// TODO merge common actions
 		if (addFiles && (objy.cap(1) == "machine" || objy.cap(1) == "plat")) {
@@ -181,11 +181,12 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 {
     KUrl projectRoot(project->folder());
     KUrl buildRoot;
-    QHash<QString, QString> &_defs = _defines[project];
 
-    _machDirs.clear();
-    _defs.clear();
+    // This effectively cleans up everything
+    projectClosing(project);
+
     // Standard definitions
+    QHash<QString, QString> &_defs = _defines[project];
     _defs["__KERNEL__"] = "";
 
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
@@ -205,12 +206,12 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 	    parseMakefiles(archUrl, project);
     }
 
-    // TODO can't we parse the root Makefile for that?
-    // TODO replace AbstractFileManager with our own to which
-    // valid files are directly added and parsed for includes
-    // TODO keep a list of "banned" (i.e. not obj-y) and allow
-    // parsing for all others? that would probably make more sense
-    // for files that are included from others.
+    /*
+     * TODO can't we parse the root Makefile for that?
+     * TODO do the parsing in isValid if the timestamp for
+     * the .config or the Makefile is more recent than our
+     * last parse.
+     */
     parseMakefiles(KUrl(projectRoot, "init/"), project);
     parseMakefiles(KUrl(projectRoot, "sound/"), project);
     parseMakefiles(KUrl(projectRoot, "net/"), project);
@@ -227,6 +228,13 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     parseMakefiles(KUrl(projectRoot, "drivers/"), project);
 
     return AbstractFileManagerPlugin::import(project);
+}
+
+void KDevKernelPlugin::projectClosing (KDevelop::IProject *project)
+{
+    _validFiles.remove(project);
+    _machDirs.remove(project);
+    _defines.remove(project);
 }
 
 KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString& target, KDevelop::ProjectFolderItem *parent)
