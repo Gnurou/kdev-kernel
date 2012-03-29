@@ -6,6 +6,7 @@ find_package(KDevPlatform 1.2.60 REQUIRED)
 include_directories(
     ${KDE4_INCLUDES}
     ${KDEVPLATFORM_INCLUDE_DIR}
+    ${KDEVPLATFORM_INCLUDE_DIR}/../kdevelop
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}
@@ -13,7 +14,6 @@ include_directories(
 
 set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
-    kernelbuildjob.cpp
 )
 
 kde4_add_plugin(kdevkernel

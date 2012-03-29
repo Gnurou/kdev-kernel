@@ -27,6 +27,7 @@
 #include <QHash>
 
 class KJob;
+class IMakeBuilder;
 namespace KDevelop
 {
 class ProjectBaseItem;
@@ -44,6 +45,8 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
     Q_INTERFACES(KDevelop::IBuildSystemManager)
 
 private:
+    IMakeBuilder *_builder;
+
     QMap<KDevelop::IProject *, QSet<KUrl> > _validFiles;
     QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
     QMap<KDevelop::IProject *, QStringList> _machDirs;
@@ -87,6 +90,9 @@ public:
     virtual KJob *clean(KDevelop::ProjectBaseItem *item);
     virtual KJob *configure(KDevelop::IProject *item);
     virtual KJob *prune(KDevelop::IProject *item);
+
+protected:
+    virtual KJob *jobForTarget(KDevelop::IProject *item, const QString &target);
 
 private slots:
     void projectClosing(KDevelop::IProject *project);

@@ -18,12 +18,13 @@
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfigwidget.h"
 #include "kdevkernelconfig.h"
-#include "kernelbuildjob.h"
 
 #include <interfaces/icore.h>
 #include <interfaces/iprojectcontroller.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
+#include <interfaces/iplugincontroller.h>
+#include <make/imakebuilder.h>
 #include <project/projectmodel.h>
 #include <KPluginFactory>
 #include <KLocalizedString>
@@ -54,6 +55,12 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
+
+    IPlugin* i = core()->pluginController()->pluginForExtension("org.kdevelop.IMakeBuilder");
+    if (i)
+    {
+        _builder = i->extension<IMakeBuilder>();
+    }
 
     connect(core()->projectController(), SIGNAL(projectClosing(KDevelop::IProject *)), this, SLOT(projectClosing(KDevelop::IProject *)));
 }
@@ -225,7 +232,8 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     if (config.hasKey(KERN_ARCH)) {
         KUrl archUrl(projectRoot, "arch/");
         _validFiles[project] << archUrl;
-        archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, "") + "/");
+        archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, ""));
+        archUrl.adjustPath(KUrl::AddTrailingSlash);
         _validFiles[project] << archUrl;
         parseMakefiles(archUrl, project);
     }
@@ -337,24 +345,43 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
-    return new KernelBuildJob(item, KernelBuildJob::Build);
+    // TODO instead of this, have all, vmlinux, etc... as targets in the files view.
+    return jobForTarget(item->project(), "all");
 }
 
 KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
-    Q_UNUSED(item)
-    return 0;
+    if (_builder) {
+        return _builder->clean(item);
+    }
+    else return 0;
 }
 
 KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 {
-    return new KernelBuildJob(project->projectItem(), KernelBuildJob::Configure);
+    return jobForTarget(project, "xconfig");
 }
 
 KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 {
-    Q_UNUSED(project)
-    return 0;
+    if (_builder) {
+        return _builder->executeMakeTarget(project->projectItem(), "mrproper");
+    }
+    else return 0;
 }
+
+KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
+{
+    if (_builder) {
+        QStringList tList;
+        KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+        if (config.hasKey(KERN_BDIR))
+            tList << QString("O=%1").arg(KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
+        tList << target;
+        return _builder->executeMakeTarget(project->projectItem(), tList.join(" "));
+    }
+    else return 0;
+}
+
 
 #include "kdevkernelplugin.moc"

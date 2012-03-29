@@ -13,4 +13,5 @@ X-KDE-PluginInfo-License=GPL
 X-KDevelop-Version=14
 X-KDevelop-Category=Project
 X-KDevelop-Interfaces=org.kdevelop.IProjectBuilder,org.kdevelop.IProjectFileManager,org.kdevelop.IBuildSystemManager
+X-KDevelop-IRequired=org.kdevelop.IMakeBuilder
 X-KDevelop-Mode=NoGUI
