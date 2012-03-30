@@ -125,13 +125,16 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     }
 }
 
-void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project)
+void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project) const
 {
     static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
-    QSet<KUrl> &_files = _validFiles[project];
+    ValidFilesList &validFiles = _validFiles[project][dir];
+
+    validFiles.lastUpdate = QTime::currentTime();
+    validFiles.validFiles.clear();
 
     if (!makefile.exists() || !makefile.open(QIODevice::ReadOnly)) return;
 
@@ -189,18 +192,14 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     QString archDir(QString("arch/%1/").arg(config.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
-        // Sometimes files in arch dir are referenced from the source root
-        else if (file.endsWith(archDir) && file.startsWith(archDir))
-            file = file.mid(archDir.size());
+        else if (file.endsWith("/")) file = file.left(file.size() - 1);
+        // Some directories are specified from the source root in the arch dir
+        if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
+             file = file.mid(archDir.size());
 
-        KUrl f(dir, file);
-        qDebug() << "VALID FILE" << f;
-
-        if (file.endsWith('/')) parseMakefiles(f, project);
-        else _files << f;
+        validFiles.validFiles << file;
+        qDebug() << "VALID FILE" << dir << file;
     }
-
-    if (!files.isEmpty()) _files << dir;
 }
 
 // TODO cleanup everything when the project closes!
@@ -227,12 +226,14 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     _validFiles[project].clear();
 
+    ValidFilesList &rootFiles = _validFiles[project][projectRoot];
+    rootFiles.lastUpdate = QTime::currentTime();
+
     if (config.hasKey(KERN_ARCH)) {
         KUrl archUrl(projectRoot, "arch/");
-        _validFiles[project] << archUrl;
-        archUrl = KUrl(archUrl, config.readEntry(KERN_ARCH, "") + "/");
-        _validFiles[project] << archUrl;
-        parseMakefiles(archUrl, project);
+        rootFiles.validFiles << "arch";
+        _validFiles[project][archUrl].lastUpdate = QTime::currentTime();
+        _validFiles[project][archUrl].validFiles << config.readEntry(KERN_ARCH, "");
     }
 
     /*
@@ -241,20 +242,19 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
      * the .config or the Makefile is more recent than our
      * last parse.
      */
-    parseMakefiles(KUrl(projectRoot, "init/"), project);
-    parseMakefiles(KUrl(projectRoot, "sound/"), project);
-    parseMakefiles(KUrl(projectRoot, "net/"), project);
-    parseMakefiles(KUrl(projectRoot, "lib/"), project);
-    parseMakefiles(KUrl(projectRoot, "usr/"), project);
-    parseMakefiles(KUrl(projectRoot, "kernel/"), project);
-    parseMakefiles(KUrl(projectRoot, "mm/"), project);
-    parseMakefiles(KUrl(projectRoot, "fs/"), project);
-    parseMakefiles(KUrl(projectRoot, "ipc/"), project);
-    parseMakefiles(KUrl(projectRoot, "security/"), project);
-    parseMakefiles(KUrl(projectRoot, "crypto/"), project);
-    parseMakefiles(KUrl(projectRoot, "block/"), project);
-
-    parseMakefiles(KUrl(projectRoot, "drivers/"), project);
+    rootFiles.validFiles << "init";
+    rootFiles.validFiles << "sound";
+    rootFiles.validFiles << "net";
+    rootFiles.validFiles << "lib";
+    rootFiles.validFiles << "usr";
+    rootFiles.validFiles << "kernel";
+    rootFiles.validFiles << "mm";
+    rootFiles.validFiles << "fs";
+    rootFiles.validFiles << "ipc";
+    rootFiles.validFiles << "security";
+    rootFiles.validFiles << "crypto";
+    rootFiles.validFiles << "block";
+    rootFiles.validFiles << "drivers";
 
     return AbstractFileManagerPlugin::import(project);
 }
@@ -301,8 +301,18 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
 bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const
 {
     Q_UNUSED(isFolder)
+    KUrl containingDir(url.directory());
+    containingDir.adjustPath(KUrl::AddTrailingSlash);
+    QString file(url.fileName());
+    const ValidFilesList &validFiles(_validFiles[project][containingDir]);
     bool valid = false;
     static QRegExp Kconf("/Kconfig($|\\.?)");
+    QTime curTime(QTime::currentTime());
+
+    // TODO Check if the Makefile of the containing dir should be parsed again
+    if (!validFiles.lastUpdate.isValid()) {
+        parseMakefiles(containingDir, project);
+    }
 
     QString lFile(url.toLocalFile());
     // Files in include directories shall always be processed
@@ -322,9 +332,9 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     else if (lFile.endsWith(".h") || lFile.endsWith("/Makefile")) valid = true;
     // And KConfig files
     else if (lFile.contains(Kconf)) valid = true;
-    else if (_validFiles[project].contains(url)) valid = true;
+    else if (validFiles.validFiles.contains(file)) valid = true;
 
-    qDebug() << "isValid" << url << valid;
+    qDebug() << "isValid" << containingDir << file << valid;
     return valid;
 }
 
