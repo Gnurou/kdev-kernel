@@ -31,6 +31,7 @@
 #include <QObject>
 
 #include <QFile>
+#include <QFileInfo>
 #include <QtDebug>
 
 K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
@@ -125,7 +126,7 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     }
 }
 
-void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *project) const
+void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *project) const
 {
     static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
@@ -133,7 +134,7 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
     ValidFilesList &validFiles = _validFiles[project][dir];
 
-    validFiles.lastUpdate = QTime::currentTime();
+    validFiles.lastUpdate = QDateTime::currentDateTime();
     validFiles.validFiles.clear();
 
     if (!makefile.exists() || !makefile.open(QIODevice::ReadOnly)) return;
@@ -227,20 +228,17 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     _validFiles[project].clear();
 
     ValidFilesList &rootFiles = _validFiles[project][projectRoot];
-    rootFiles.lastUpdate = QTime::currentTime();
+    rootFiles.lastUpdate = QDateTime::currentDateTime();
 
     if (config.hasKey(KERN_ARCH)) {
         KUrl archUrl(projectRoot, "arch/");
         rootFiles.validFiles << "arch";
-        _validFiles[project][archUrl].lastUpdate = QTime::currentTime();
+        _validFiles[project][archUrl].lastUpdate = QDateTime::currentDateTime();
         _validFiles[project][archUrl].validFiles << config.readEntry(KERN_ARCH, "");
     }
 
     /*
      * TODO can't we parse the root Makefile for that?
-     * TODO do the parsing in isValid if the timestamp for
-     * the .config or the Makefile is more recent than our
-     * last parse.
      */
     rootFiles.validFiles << "init";
     rootFiles.validFiles << "sound";
@@ -308,10 +306,10 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     bool valid = false;
     static QRegExp Kconf("/Kconfig($|\\.?)");
     QTime curTime(QTime::currentTime());
-
-    // TODO Check if the Makefile of the containing dir should be parsed again
-    if (!validFiles.lastUpdate.isValid()) {
-        parseMakefiles(containingDir, project);
+    QFileInfo mFile(KUrl(containingDir, "Makefile").toLocalFile());
+    
+    if (mFile.exists() && validFiles.lastUpdate <= mFile.lastModified()) {
+        parseMakefile(containingDir, project);
     }
 
     QString lFile(url.toLocalFile());

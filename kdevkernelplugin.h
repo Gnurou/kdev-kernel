@@ -25,7 +25,7 @@
 #include <QSet>
 #include <QMap>
 #include <QHash>
-#include <QDate>
+#include <QDateTime>
 
 class KJob;
 namespace KDevelop
@@ -39,7 +39,7 @@ class IProject;
 
 struct ValidFilesList
 {
-    QTime lastUpdate;
+    QDateTime lastUpdate;
     QSet<QString> validFiles;
 };
 
@@ -63,7 +63,7 @@ private:
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefiles(const KUrl &dir, KDevelop::IProject *project) const;
+    void parseMakefile(const KUrl &dir, KDevelop::IProject *project) const;
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
