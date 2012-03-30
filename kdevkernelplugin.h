@@ -25,6 +25,7 @@
 #include <QSet>
 #include <QMap>
 #include <QHash>
+#include <QDateTime>
 
 class KJob;
 class IMakeBuilder;
@@ -37,6 +38,12 @@ class ProjectFolderItem;
 class IProject;
 }
 
+struct ValidFilesList
+{
+    QDateTime lastUpdate;
+    QSet<QString> validFiles;
+};
+
 class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDevelop::IBuildSystemManager, public KDevelop::IProjectBuilder
 {
     Q_OBJECT
@@ -47,9 +54,9 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
 private:
     IMakeBuilder *_builder;
 
-    QMap<KDevelop::IProject *, QSet<KUrl> > _validFiles;
-    QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
-    QMap<KDevelop::IProject *, QStringList> _machDirs;
+    mutable QMap<KDevelop::IProject *, QMap<KUrl, ValidFilesList > > _validFiles;
+    mutable QMap<KDevelop::IProject *, QStringList> _machDirs;
+    mutable QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
 
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
@@ -59,7 +66,7 @@ private:
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefiles(const KUrl &dir, KDevelop::IProject *project);
+    void parseMakefile(const KUrl &dir, KDevelop::IProject *project) const;
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
