@@ -185,8 +185,13 @@ void KDevKernelPlugin::parseMakefiles(const KUrl &dir, KDevelop::IProject *proje
         }
     }
 
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    QString archDir(QString("arch/%1/").arg(config.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
+        // Sometimes files in arch dir are referenced from the source root
+        else if (file.endsWith(archDir) && file.startsWith(archDir))
+            file = file.mid(archDir.size());
 
         KUrl f(dir, file);
         qDebug() << "VALID FILE" << f;
