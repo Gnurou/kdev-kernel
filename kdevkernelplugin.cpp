@@ -385,12 +385,15 @@ KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
 {
     if (_builder) {
-        QStringList tList;
+        MakeVariables makeVars;
         KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
         if (config.hasKey(KERN_BDIR))
-            tList << QString("O=%1").arg(KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
-        tList << target;
-        return _builder->executeMakeTarget(project->projectItem(), tList.join(" "));
+            makeVars << QPair<QString, QString>("O", KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
+        if (config.hasKey(KERN_ARCH))
+            makeVars << QPair<QString, QString>("ARCH", config.readEntry(KERN_ARCH));
+        if (config.hasKey(KERN_CROSS))
+            makeVars << QPair<QString, QString>("CROSS_COMPILE", config.readEntry(KERN_CROSS));
+        return _builder->executeMakeTargets(project->projectItem(), QStringList(target), makeVars);
     }
     else return 0;
 }
