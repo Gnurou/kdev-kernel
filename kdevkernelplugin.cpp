@@ -358,15 +358,12 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
     // TODO instead of this, have all, vmlinux, etc... as targets in the files view.
-    return jobForTarget(item->project(), "all");
+    return jobForTarget(item->project());
 }
 
 KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
-    if (_builder) {
-        return _builder->clean(item);
-    }
-    else return 0;
+    return jobForTarget(item->project(), "clean");
 }
 
 KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
@@ -376,10 +373,7 @@ KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 
 KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 {
-    if (_builder) {
-        return _builder->executeMakeTarget(project->projectItem(), "mrproper");
-    }
-    else return 0;
+    return jobForTarget(project, "mrproper");
 }
 
 KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
@@ -393,10 +387,11 @@ KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString 
             makeVars << QPair<QString, QString>("ARCH", config.readEntry(KERN_ARCH));
         if (config.hasKey(KERN_CROSS))
             makeVars << QPair<QString, QString>("CROSS_COMPILE", config.readEntry(KERN_CROSS));
-        return _builder->executeMakeTargets(project->projectItem(), QStringList(target), makeVars);
+        return _builder->executeMakeTargets(project->projectItem(),
+                                            target.isEmpty() ? QStringList() : QStringList(target),
+                                            makeVars);
     }
     else return 0;
 }
-
 
 #include "kdevkernelplugin.moc"

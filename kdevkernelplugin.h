@@ -99,7 +99,7 @@ public:
     virtual KJob *prune(KDevelop::IProject *item);
 
 protected:
-    virtual KJob *jobForTarget(KDevelop::IProject *item, const QString &target);
+    virtual KJob *jobForTarget(KDevelop::IProject *item, const QString &target = QString());
 
 private slots:
     void projectClosing(KDevelop::IProject *project);
