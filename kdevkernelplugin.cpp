@@ -221,6 +221,8 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     // Force language to "C"
     project->projectConfiguration()->group("Project").writeEntry("Language", "C");
+    // Force disabling of make-based include path resolver
+    project->projectConfiguration()->group("MakeBuilder").writeEntry("Resolve Using Make", false);
 
     // Standard definitions
     QHash<QString, QString> &_defs = _defines[project];
