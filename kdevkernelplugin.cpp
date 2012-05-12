@@ -219,6 +219,9 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     // This effectively cleans up everything
     projectClosing(project);
 
+    // Force language to "C"
+    project->projectConfiguration()->group("Project").writeEntry("Language", "C");
+
     // Standard definitions
     QHash<QString, QString> &_defs = _defines[project];
     _defs["__KERNEL__"] = "";
