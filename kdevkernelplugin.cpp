@@ -81,10 +81,14 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
     KUrl::List ret;
     KUrl projectRoot = project->folder();
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    KUrl bDir(KUrl(config.readEntry(KERN_BDIR, projectRoot)));
+    bDir.adjustPath(KUrl::AddTrailingSlash);
 
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
     ret << KUrl(projectRoot, "include");
+    if (bDir != projectRoot)
+        ret << KUrl(bDir, "include");
 
     if (config.hasKey(KERN_ARCH)) {
         QString arch(config.readEntry(KERN_ARCH));
@@ -93,6 +97,9 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
         foreach (const QString & machDir, _machDirs[project]) {
             ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
         }
+
+        // Build-specific generated includes
+        ret << KUrl(bDir, QString("arch/%1/include/generated").arg(arch));
     }
 
     // TODO /usr/include and such should not be looked for
