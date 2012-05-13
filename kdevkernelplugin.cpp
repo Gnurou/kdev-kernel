@@ -117,7 +117,9 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     QFile dfile(dotconfig.toLocalFile());
     static QRegExp def("(\\w+)=(\"?[^\\n]+\"?)\n?");
 
+#ifdef DEBUG
     qDebug() << "kernel dotconfig" << dotconfig;
+#endif
 
     if (!dfile.exists() || !dfile.open(QIODevice::ReadOnly)) return;
 
@@ -135,7 +137,9 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
         else if (val == "n") val = "0";
         else if (val.startsWith('"') && val.endsWith('"')) val = val.mid(1, val.size() - 2);
 
+#ifdef DEBUG
         qDebug() << "kernel def:" << key << val;
+#endif
         _defs[key] = val;
     }
 }
@@ -213,7 +217,9 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
              file = file.mid(archDir.size());
 
         validFiles.validFiles << file;
+#ifdef DEBUG
         qDebug() << "VALID FILE" << dir << file;
+#endif
     }
 }
 
@@ -351,7 +357,9 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     else if (lFile.contains(Kconf)) valid = true;
     else if (validFiles.validFiles.contains(file)) valid = true;
 
+#ifdef DEBUG
     qDebug() << "isValid" << containingDir << file << valid;
+#endif
     return valid;
 }
 
