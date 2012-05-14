@@ -81,10 +81,14 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
     KUrl::List ret;
     KUrl projectRoot = project->folder();
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    KUrl bDir(KUrl(config.readEntry(KERN_BDIR, projectRoot)));
+    bDir.adjustPath(KUrl::AddTrailingSlash);
 
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
     ret << KUrl(projectRoot, "include");
+    if (bDir != projectRoot)
+        ret << KUrl(bDir, "include");
 
     if (config.hasKey(KERN_ARCH)) {
         QString arch(config.readEntry(KERN_ARCH));
@@ -93,6 +97,9 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
         foreach (const QString & machDir, _machDirs[project]) {
             ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
         }
+
+        // Build-specific generated includes
+        ret << KUrl(bDir, QString("arch/%1/include/generated").arg(arch));
     }
 
     // TODO /usr/include and such should not be looked for
@@ -110,7 +117,9 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     QFile dfile(dotconfig.toLocalFile());
     static QRegExp def("(\\w+)=(\"?[^\\n]+\"?)\n?");
 
+#ifdef DEBUG
     qDebug() << "kernel dotconfig" << dotconfig;
+#endif
 
     if (!dfile.exists() || !dfile.open(QIODevice::ReadOnly)) return;
 
@@ -128,7 +137,9 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
         else if (val == "n") val = "0";
         else if (val.startsWith('"') && val.endsWith('"')) val = val.mid(1, val.size() - 2);
 
+#ifdef DEBUG
         qDebug() << "kernel def:" << key << val;
+#endif
         _defs[key] = val;
     }
 }
@@ -206,7 +217,9 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
              file = file.mid(archDir.size());
 
         validFiles.validFiles << file;
+#ifdef DEBUG
         qDebug() << "VALID FILE" << dir << file;
+#endif
     }
 }
 
@@ -218,6 +231,11 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     // This effectively cleans up everything
     projectClosing(project);
+
+    // Force language to "C"
+    project->projectConfiguration()->group("Project").writeEntry("Language", "C");
+    // Force disabling of make-based include path resolver
+    project->projectConfiguration()->group("MakeBuilder").writeEntry("Resolve Using Make", false);
 
     // Standard definitions
     QHash<QString, QString> &_defs = _defines[project];
@@ -339,7 +357,9 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     else if (lFile.contains(Kconf)) valid = true;
     else if (validFiles.validFiles.contains(file)) valid = true;
 
+#ifdef DEBUG
     qDebug() << "isValid" << containingDir << file << valid;
+#endif
     return valid;
 }
 
