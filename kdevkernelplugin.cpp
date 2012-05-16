@@ -226,7 +226,6 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
             KUrl nDir(nFile.directory());
             nDir.adjustPath(KUrl::AddTrailingSlash);
             _validFiles[project][nDir].validFiles << nFile.fileName();
-            qDebug() << "SPECIAL VALID FILE" << nDir << nFile.fileName();
         }
         validFiles.validFiles << file;
 #ifdef DEBUG
@@ -379,6 +378,15 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     // And KConfig files
     else if (lFile.contains(Kconf)) valid = true;
     else if (validFiles.validFiles.contains(file)) valid = true;
+    // Last ressort, the user-list of hardcoded files to accept
+    else {
+        KConfigGroup config = project->projectConfiguration()->group(KERN_KGROUP);
+        QStringList vFiles(config.readEntry(KERN_VALIDFILES, QStringList()));
+        KUrl pRoot(project->folder());
+        pRoot.adjustPath(KUrl::AddTrailingSlash);
+        QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()));
+        if (vFiles.contains(fPath)) valid = true;
+    }
 
 #ifdef DEBUG
     qDebug() << "isValid" << containingDir << file << valid;
