@@ -24,6 +24,7 @@
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
 #include <interfaces/iplugincontroller.h>
+#include <interfaces/iprojectcontroller.h>
 #include <make/imakebuilder.h>
 #include <project/projectmodel.h>
 #include <KPluginFactory>
@@ -144,6 +145,9 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     }
 }
 
+// TODO This is crap. Valid files should be stored in the project directly, and every
+// directory/file with includes should have a list of the valid files it added, and which
+// get removed from the global list as we reparse the Makefile/source file.
 void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *project) const
 {
     static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
@@ -153,7 +157,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
     ValidFilesList &validFiles = _validFiles[project][dir];
 
     validFiles.lastUpdate = QDateTime::currentDateTime();
-    validFiles.validFiles.clear();
+    //validFiles.validFiles.clear();
 
     if (!makefile.exists() || !makefile.open(QIODevice::ReadOnly)) return;
 
@@ -216,6 +220,14 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
         if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
              file = file.mid(archDir.size());
 
+        // Sometimes files are referenced that are several directories below
+        if (file.contains('/')) {
+            KUrl nFile(dir, file);
+            KUrl nDir(nFile.directory());
+            nDir.adjustPath(KUrl::AddTrailingSlash);
+            _validFiles[project][nDir].validFiles << nFile.fileName();
+            qDebug() << "SPECIAL VALID FILE" << nDir << nFile.fileName();
+        }
         validFiles.validFiles << file;
 #ifdef DEBUG
         qDebug() << "VALID FILE" << dir << file;
@@ -227,10 +239,22 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
 KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *project)
 {
     KUrl projectRoot(project->folder());
-    KUrl buildRoot;
+    projectRoot.adjustPath(KUrl::AddTrailingSlash);
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    KUrl buildRoot = config.readEntry(KERN_BDIR, projectRoot);
+    buildRoot.adjustPath(KUrl::AddTrailingSlash);
 
     // This effectively cleans up everything
     projectClosing(project);
+
+    // If no .config file in the build directory, force user to configure to choose one
+    if (!QFile(KUrl(buildRoot, ".config").toLocalFile()).exists()) {
+        // Populate a drop down list with all the _defconfig options, plus one "no change"
+        // if there is already a .config file in the build dir. When dialog closes and a
+        // defconfig is selected, run make to create it in the build dir.
+        KDevelop::IProjectController *pc = KDevelop::ICore::self()->projectController();
+        pc->configureProject(project);
+    }
 
     // Force language to "C"
     project->projectConfiguration()->group("Project").writeEntry("Language", "C");
@@ -241,7 +265,6 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     QHash<QString, QString> &_defs = _defines[project];
     _defs["__KERNEL__"] = "";
 
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
 
     if (config.hasKey(KERN_BDIR))
         buildRoot = config.readEntry(KERN_BDIR, KUrl());
