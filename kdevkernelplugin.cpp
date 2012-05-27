@@ -16,7 +16,6 @@
  */
 
 #include "kdevkernelplugin.h"
-#include "kdevkernelconfigwidget.h"
 #include "kdevkernelconfig.h"
 
 #include <interfaces/icore.h>
@@ -25,11 +24,11 @@
 #include <interfaces/iplugin.h>
 #include <interfaces/iplugincontroller.h>
 #include <interfaces/iprojectcontroller.h>
-#include <make/imakebuilder.h>
 #include <project/projectmodel.h>
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <KAboutData>
+#include <KProcess>
 #include <QObject>
 
 #include <QFile>
@@ -113,7 +112,7 @@ QHash<QString, QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *ite
     return _defines[item->project()];
 }
 
-void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QString> &_defs)
+void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &dotconfig, QHash<QString, QString> &_defs)
 {
     QFile dfile(dotconfig.toLocalFile());
     static QRegExp def("(\\w+)=(\"?[^\\n]+\"?)\n?");
@@ -122,7 +121,28 @@ void KDevKernelPlugin::parseDotConfig(const KUrl &dotconfig, QHash<QString, QStr
     qDebug() << "kernel dotconfig" << dotconfig;
 #endif
 
-    if (!dfile.exists() || !dfile.open(QIODevice::ReadOnly)) return;
+    // If the .config file does not exist, create it by invoking make.
+    if (!dfile.exists()) {
+        KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+        QString conf(config.readEntry(KERN_DEFCONFIG, ""));
+        if (!conf.isEmpty()) {
+            MakeVariables makeVars(makeVarsForProject(project));
+            QStringList vars;
+            MakeVariables::const_iterator it = makeVars.constBegin();
+            while (it != makeVars.constEnd()) {
+                vars += QString("%1=%2").arg(it->first).arg(it->second);
+                ++it;
+            }
+            vars += conf + "_defconfig";
+            KProcess *process = new KProcess();
+            process->setWorkingDirectory(project->folder().toLocalFile());
+            process->setProgram("make", vars);
+            process->execute();
+            delete process;
+        }
+    }
+
+    if (!dfile.open(QIODevice::ReadOnly)) return;
 
     while (1) {
         QString line(dfile.readLine());
@@ -234,7 +254,6 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
     }
 }
 
-// TODO cleanup everything when the project closes!
 KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *project)
 {
     KUrl projectRoot(project->folder());
@@ -246,6 +265,11 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     // This effectively cleans up everything
     projectClosing(project);
 
+    // Force language to "C"
+    project->projectConfiguration()->group("Project").writeEntry("Language", "C");
+    // Force disabling of make-based include path resolver
+    project->projectConfiguration()->group("MakeBuilder").writeEntry("Resolve Using Make", false);
+
     // If no .config file in the build directory, force user to configure to choose one
     if (!QFile(KUrl(buildRoot, ".config").toLocalFile()).exists()) {
         // Populate a drop down list with all the _defconfig options, plus one "no change"
@@ -255,22 +279,16 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
         pc->configureProject(project);
     }
 
-    // Force language to "C"
-    project->projectConfiguration()->group("Project").writeEntry("Language", "C");
-    // Force disabling of make-based include path resolver
-    project->projectConfiguration()->group("MakeBuilder").writeEntry("Resolve Using Make", false);
-
     // Standard definitions
     QHash<QString, QString> &_defs = _defines[project];
     _defs["__KERNEL__"] = "";
-
 
     if (config.hasKey(KERN_BDIR))
         buildRoot = config.readEntry(KERN_BDIR, KUrl());
     else buildRoot = projectRoot;
 
     buildRoot.adjustPath(KUrl::AddTrailingSlash);
-    parseDotConfig(KUrl(buildRoot, ".config"), _defs);
+    parseDotConfig(project, KUrl(buildRoot, ".config"), _defs);
 
     _validFiles[project].clear();
 
@@ -427,20 +445,35 @@ KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
     return jobForTarget(project, "mrproper");
 }
 
+KJob *KDevKernelPlugin::createDotConfig (KDevelop::IProject *project)
+{
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    QString defConfig(config.readEntry(KERN_DEFCONFIG, ""));
+    qDebug() << "FOO" << defConfig;
+    if (defConfig.isEmpty()) return 0;
+    return jobForTarget(project, defConfig + "_defconfig");
+}
+
+MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
+{
+    MakeVariables makeVars;
+    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
+    if (config.hasKey(KERN_BDIR))
+        makeVars << QPair<QString, QString>("O", KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
+    if (config.hasKey(KERN_ARCH))
+        makeVars << QPair<QString, QString>("ARCH", config.readEntry(KERN_ARCH));
+    if (config.hasKey(KERN_CROSS))
+        makeVars << QPair<QString, QString>("CROSS_COMPILE", config.readEntry(KERN_CROSS));
+
+    return makeVars;
+}
+
 KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
 {
     if (_builder) {
-        MakeVariables makeVars;
-        KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-        if (config.hasKey(KERN_BDIR))
-            makeVars << QPair<QString, QString>("O", KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
-        if (config.hasKey(KERN_ARCH))
-            makeVars << QPair<QString, QString>("ARCH", config.readEntry(KERN_ARCH));
-        if (config.hasKey(KERN_CROSS))
-            makeVars << QPair<QString, QString>("CROSS_COMPILE", config.readEntry(KERN_CROSS));
         return _builder->executeMakeTargets(project->projectItem(),
                                             target.isEmpty() ? QStringList() : QStringList(target),
-                                            makeVars);
+                                            makeVarsForProject(project));
     }
     else return 0;
 }

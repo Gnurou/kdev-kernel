@@ -22,6 +22,7 @@
 #define KERN_BDIR "buildDir"
 #define KERN_ARCH "arch"
 #define KERN_CROSS "crossPrefix"
+#define KERN_DEFCONFIG "defconfig"
 #define KERN_VALIDFILES "validFiles"
 
 #endif

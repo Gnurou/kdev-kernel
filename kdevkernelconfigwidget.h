@@ -35,13 +35,19 @@ class KDevKernelConfigWidget : public QWidget, public Ui::KDevKernelConfigWidget
 {
     Q_OBJECT
 public:
-    KDevKernelConfigWidget(QWidget *parent = 0);
+    KDevKernelConfigWidget(QWidget *parent, const QString &projectRoot);
     void loadFrom(KConfig *config);
     void saveTo(KConfig *config, KDevelop::IProject *project);
     void loadDefaults();
 
 signals:
     void changed();
+
+private slots:
+    void archChanged(const QString &arch);
+
+private:
+    const QString _projectRoot;
 };
 
 #endif

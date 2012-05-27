@@ -17,8 +17,10 @@
 
 #include "kcm_kdevkernel.h"
 
+#include <QtDebug>
 #include <KPluginFactory>
 #include <QVBoxLayout>
+#include <QFile>
 
 #include "kdevkernelconfigwidget.h"
 #include "kcfg_kdevkernelconfig.h"
@@ -30,7 +32,7 @@ KDevKernelKCModule::KDevKernelKCModule(QWidget *parent, const QVariantList &args
     : ProjectKCModule<KDevKernelConfig>(KDevKernelKCModuleFactory::componentData(), parent, args)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
-    configWidget = new KDevKernelConfigWidget(this);
+    configWidget = new KDevKernelConfigWidget(this, KUrl(args.at(2).toString()).directory());
     connect(configWidget, SIGNAL(changed()), SLOT(dataChanged()));
     layout->addWidget(configWidget);
 

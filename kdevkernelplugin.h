@@ -21,6 +21,7 @@
 #include <project/interfaces/ibuildsystemmanager.h>
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
+#include <make/imakebuilder.h>
 #include <QVariant>
 #include <QSet>
 #include <QMap>
@@ -61,7 +62,7 @@ private:
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
      */
-    void parseDotConfig(const KUrl &dotconfig, QHash<QString, QString> &_defs);
+    void parseDotConfig(KDevelop::IProject *project, const KUrl &dotconfig, QHash<QString, QString> &_defs);
     /**
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
@@ -92,17 +93,19 @@ public:
     virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *item) const;
 
     // IProjectBuilder interface
-    virtual KJob *install(KDevelop::ProjectBaseItem *item);
-    virtual KJob *build(KDevelop::ProjectBaseItem *item);
-    virtual KJob *clean(KDevelop::ProjectBaseItem *item);
-    virtual KJob *configure(KDevelop::IProject *item);
-    virtual KJob *prune(KDevelop::IProject *item);
+    virtual KJob *install(KDevelop::ProjectBaseItem *project);
+    virtual KJob *build(KDevelop::ProjectBaseItem *project);
+    virtual KJob *clean(KDevelop::ProjectBaseItem *project);
+    virtual KJob *configure(KDevelop::IProject *project);
+    virtual KJob *prune(KDevelop::IProject *project);
+    virtual KJob *createDotConfig(KDevelop::IProject *project);
 
 protected:
-    virtual KJob *jobForTarget(KDevelop::IProject *item, const QString &target = QString());
+    virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);
+    virtual KJob *jobForTarget(KDevelop::IProject *project, const QString &target = QString());
 
 private slots:
-    void projectClosing(KDevelop::IProject *project);
+    virtual void projectClosing(KDevelop::IProject *project);
 };
 
 #endif

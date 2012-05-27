@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
-    <height>304</height>
+    <width>455</width>
+    <height>276</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,184 +46,52 @@
    <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Arch &amp;&amp; cross-compilation</string>
+      <string>Configuration</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QFormLayout" name="formLayout">
-        <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
            <string>Arch:</string>
           </property>
-          <property name="buddy">
-           <cstring>arch</cstring>
-          </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item>
          <widget class="KComboBox" name="arch">
           <property name="toolTip">
            <string>Target architecture of the kernel. This will set the ARCH variable accordingly.</string>
           </property>
-          <item>
-           <property name="text">
-            <string>Same as host</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">alpha</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">arm</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">avr32</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">blackfin</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>c6x</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">cris</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">frv</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">h8300</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>hexagon</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">ia64</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">m32r</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">m68k</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">microblaze</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">mips</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">mn10300</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">parisc</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">powerpc</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">s390</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">score</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">sh</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">sparc</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">tile</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">um</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">unicore32</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">x86</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">xtensa</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Cross-compiler:</string>
-          </property>
-          <property name="buddy">
-           <cstring>crossCompiler</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="KUrlRequester" name="crossCompiler">
-          <property name="toolTip">
-           <string>Select the C compiler to use for building this kernel. This will set the CROSS_COMPILE variable accordingly.</string>
-          </property>
-          <property name="filter">
-           <string>*gcc</string>
-          </property>
          </widget>
         </item>
        </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Config:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="KComboBox" name="defconfig"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Cross-compiler</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="KUrlRequester" name="crossCompiler"/>
       </item>
      </layout>
     </widget>
