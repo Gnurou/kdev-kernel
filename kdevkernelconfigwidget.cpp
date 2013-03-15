@@ -128,8 +128,19 @@ void KDevKernelConfigWidget::archChanged (const QString &arch)
     KUrl pRoot(_projectRoot);
     pRoot.adjustPath(KUrl::AddTrailingSlash);
     QDir configDirs(KUrl(pRoot, QString("arch/%1/configs").arg(arch)).toLocalFile());
-    foreach (const QString &configFile, configDirs.entryList()) {
+    // Search only simple files
+    foreach (const QString &configFile, configDirs.entryList(QDir::Files)) {
         if (configFile.startsWith('.')) continue;
         defconfig->addItem(configFile.left(configFile.size() - QString("_defconfig").size()));
+    }
+    // Search also in subdirectory
+    foreach (const QString &configFile, configDirs.entryList(QDir::Dirs)) {
+        if (configFile.startsWith('.')) continue;
+        QDir configSubDirs(KUrl(pRoot, QString("arch/%1/configs/%2").arg(arch).arg(configFile)).toLocalFile());
+        foreach (const QString &configSubFile, configSubDirs.entryList(QDir::Files)) {
+            if (configSubFile.startsWith('.')) continue;
+            QString defconf = configFile + "/" + configSubFile;
+            defconfig->addItem(defconf.left(defconf.size() - QString("_defconfig").size()));
+        }
     }
 }
