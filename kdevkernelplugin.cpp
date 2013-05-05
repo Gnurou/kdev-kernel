@@ -478,4 +478,13 @@ KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString 
     else return 0;
 }
 
+QList<KDevelop::IProjectBuilder *> KDevKernelPlugin::additionalBuilderPlugins(KDevelop::IProject *project) const
+{
+	Q_UNUSED(project);
+
+	QList<KDevelop::IProjectBuilder *> ret;
+	ret << _builder;
+	return ret;
+}
+
 #include "kdevkernelplugin.moc"

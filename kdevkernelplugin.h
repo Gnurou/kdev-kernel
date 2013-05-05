@@ -98,7 +98,10 @@ public:
     virtual KJob *clean(KDevelop::ProjectBaseItem *project);
     virtual KJob *configure(KDevelop::IProject *project);
     virtual KJob *prune(KDevelop::IProject *project);
+    virtual QList<KDevelop::IProjectBuilder *> additionalBuilderPlugins(KDevelop::IProject *project) const;
+
     virtual KJob *createDotConfig(KDevelop::IProject *project);
+
 
 protected:
     virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);
