@@ -42,7 +42,7 @@ K_EXPORT_PLUGIN(KernelProjectFactory(
                                "0.1",
                                ki18n("Linux Kernel Project Manager"),
                                KAboutData::License_GPL,
-                               ki18n("Copyright (C) 2011/2012 Alexandre Courbot <gnurou@gmail.com>"),
+                               ki18n("Copyright (C) 2011-2013 Alexandre Courbot <gnurou@gmail.com>"),
                                KLocalizedString(),
                                "",
                                "gnurou@gmail.com"
@@ -372,7 +372,7 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     static QRegExp Kconf("/Kconfig($|\\.?)");
     QTime curTime(QTime::currentTime());
     QFileInfo mFile(KUrl(containingDir, "Makefile").toLocalFile());
-    
+
     if (mFile.exists() && validFiles.lastUpdate <= mFile.lastModified()) {
         parseMakefile(containingDir, project);
     }
