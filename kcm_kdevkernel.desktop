@@ -6,7 +6,7 @@ ServiceTypes=KCModule
 X-KDE-ModuleType=Library
 X-KDE-Library=kcm_kdevkernel
 X-KDE-ParentApp=kdevplatformproject
-X-KDE-ParentComponents=KDevKernel,KDevGenericManager
+X-KDE-ParentComponents=KDevKernel
 X-KDE-CfgDlgHierarchy=BUILDTOOL
 
 Name=Linux Kernel
