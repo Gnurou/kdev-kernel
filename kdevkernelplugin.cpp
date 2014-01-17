@@ -426,32 +426,33 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
+    KConfigGroup makeConfig(item->project()->projectConfiguration()->group("MakeBuilder"));
+
     // TODO instead of this, have all, vmlinux, etc... as targets in the files view.
-    return jobForTarget(item->project());
+    return jobForTarget(item->project(), makeConfig.readEntry("Default Target").split(" ", QString::SkipEmptyParts));
 }
 
 KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
-    return jobForTarget(item->project(), "clean");
+    return jobForTarget(item->project(), QStringList("clean"));
 }
 
 KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 {
-    return jobForTarget(project, "xconfig");
+    return jobForTarget(project, QStringList("xconfig"));
 }
 
 KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 {
-    return jobForTarget(project, "mrproper");
+    return jobForTarget(project, QStringList("mrproper"));
 }
 
 KJob *KDevKernelPlugin::createDotConfig (KDevelop::IProject *project)
 {
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
     QString defConfig(config.readEntry(KERN_DEFCONFIG, ""));
-    qDebug() << "FOO" << defConfig;
     if (defConfig.isEmpty()) return 0;
-    return jobForTarget(project, defConfig + "_defconfig");
+    return jobForTarget(project, QStringList(defConfig + "_defconfig"));
 }
 
 MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
@@ -468,12 +469,11 @@ MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
     return makeVars;
 }
 
-KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
+KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QStringList &targets)
 {
     if (_builder) {
         return _builder->executeMakeTargets(project->projectItem(),
-                                            target.isEmpty() ? QStringList() : QStringList(target),
-                                            makeVarsForProject(project));
+                                            targets, makeVarsForProject(project));
     }
     else return 0;
 }

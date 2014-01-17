@@ -105,7 +105,7 @@ public:
 
 protected:
     virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);
-    virtual KJob *jobForTarget(KDevelop::IProject *project, const QString &target = QString());
+    virtual KJob *jobForTarget(KDevelop::IProject *project, const QStringList &targets);
 
 private slots:
     virtual void projectClosing(KDevelop::IProject *project);
