@@ -244,6 +244,14 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
         if (file.contains('/')) {
             KUrl nFile(dir, file);
             KUrl nDir(nFile.directory());
+	    // Add all the subdirectories
+	    KUrl nDir2(nDir);
+	    while (nDir2 != dir) {
+		    QString f(nDir2.fileName());
+		    QString d(nDir2.directory() + "/");
+		    _validFiles[project][d].validFiles << f;
+		    nDir2 = KUrl(d);
+	    }
             nDir.adjustPath(KUrl::AddTrailingSlash);
             _validFiles[project][nDir].validFiles << nFile.fileName();
         }
