@@ -170,7 +170,7 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
 // get removed from the global list as we reparse the Makefile/source file.
 void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *project) const
 {
-    static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
+    static QRegExp objy("([\\w-]+)-([^+:= \t]*)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
@@ -200,7 +200,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
                 if (def == "1") y = "y";
             }
 
-            if (y == "y" || y == "objs") addFiles = true;
+            if (y == "y" || y == "objs" || y == "") addFiles = true;
 
             // Special handling for machine and plat cases
             // TODO merge common actions
@@ -235,6 +235,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
     QString archDir(QString("arch/%1/").arg(config.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
+	else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
         else if (file.endsWith("/")) file = file.left(file.size() - 1);
         // Some directories are specified from the source root in the arch dir
         if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
@@ -305,9 +306,13 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     if (config.hasKey(KERN_ARCH)) {
         KUrl archUrl(projectRoot, "arch/");
+	QString arch(config.readEntry(KERN_ARCH, ""));
+	KUrl archArchUrl(archUrl, arch);
+	archArchUrl.adjustPath(KUrl::AddTrailingSlash);
         rootFiles.validFiles << "arch";
         _validFiles[project][archUrl].lastUpdate = QDateTime::currentDateTime();
-        _validFiles[project][archUrl].validFiles << config.readEntry(KERN_ARCH, "");
+        _validFiles[project][archUrl].validFiles << arch;
+	_validFiles[project][archArchUrl].validFiles << "boot";
     }
 
     /*
