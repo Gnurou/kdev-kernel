@@ -37,6 +37,7 @@ class ProjectTargetItem;
 class ProjectFileItem;
 class ProjectFolderItem;
 class IProject;
+class Path;
 }
 
 struct ValidFilesList
@@ -77,7 +78,7 @@ public:
 
     // IBuildSystemManager interface
     virtual KDevelop::IProjectBuilder *builder() const;
-    virtual KUrl::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
+    virtual KDevelop::Path::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
     virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
     virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const;
     virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent);
@@ -89,8 +90,8 @@ public:
      * A file is valid if it belongs to the list of files that are enabled through the kernel configuration.
      * A directory is valid if it contains any file we are interested in.
      */
-    virtual bool isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const;
-    virtual KUrl buildDirectory(KDevelop::ProjectBaseItem *item) const;
+    virtual bool isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const;
+    virtual KDevelop::Path buildDirectory(KDevelop::ProjectBaseItem *item) const;
 
     // IProjectBuilder interface
     virtual KJob *install(KDevelop::ProjectBaseItem *project);

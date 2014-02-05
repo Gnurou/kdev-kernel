@@ -71,9 +71,9 @@ KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
     return (KDevelop::IProjectBuilder *)(this);
 }
 
-KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
+KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
-    return includeDirectories(item->project());
+    return KDevelop::toPathList(includeDirectories(item->project()));
 }
 
 KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
@@ -374,12 +374,12 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
     return false;
 }
 
-bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::IProject *project) const
+bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const
 {
     Q_UNUSED(isFolder)
-    KUrl containingDir(url.directory());
+    KUrl containingDir(url.toUrl().directory());
     containingDir.adjustPath(KUrl::AddTrailingSlash);
-    QString file(url.fileName());
+    QString file(url.toUrl().fileName());
     const ValidFilesList &validFiles(_validFiles[project][containingDir]);
     bool valid = false;
     static QRegExp Kconf("/Kconfig($|\\.?)");
@@ -390,7 +390,7 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
         parseMakefile(containingDir, project);
     }
 
-    QString lFile(url.toLocalFile());
+    QString lFile(url.toUrl().toLocalFile());
     // Files in include directories shall always be processed
     // TODO cache the include dirs list, this is inefficient
     KUrl::List includeDirs(includeDirectories(project));
@@ -425,10 +425,10 @@ bool KDevKernelPlugin::isValid(const KUrl &url, const bool isFolder, KDevelop::I
     return valid;
 }
 
-KUrl KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
+KDevelop::Path KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
 {
     KUrl buildDir(item->project()->projectItem()->url());
-    return buildDir;
+    return KDevelop::Path(buildDir);
 }
 
 KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
