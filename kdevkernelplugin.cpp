@@ -170,7 +170,7 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
 // get removed from the global list as we reparse the Makefile/source file.
 void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *project) const
 {
-    static QRegExp objy("([\\w-]+)-([^+:= \t]+)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
+    static QRegExp objy("([\\w-]+)-([^+:= \t]*)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
     QFile makefile(KUrl(dir, "Makefile").toLocalFile());
@@ -200,7 +200,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
                 if (def == "1") y = "y";
             }
 
-            if (y == "y" || y == "objs") addFiles = true;
+            if (y == "y" || y == "objs" || y == "") addFiles = true;
 
             // Special handling for machine and plat cases
             // TODO merge common actions
@@ -235,6 +235,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
     QString archDir(QString("arch/%1/").arg(config.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
+	else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
         else if (file.endsWith("/")) file = file.left(file.size() - 1);
         // Some directories are specified from the source root in the arch dir
         if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
@@ -244,6 +245,14 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
         if (file.contains('/')) {
             KUrl nFile(dir, file);
             KUrl nDir(nFile.directory());
+	    // Add all the subdirectories
+	    KUrl nDir2(nDir);
+	    while (nDir2 != dir) {
+		    QString f(nDir2.fileName());
+		    QString d(nDir2.directory() + "/");
+		    _validFiles[project][d].validFiles << f;
+		    nDir2 = KUrl(d);
+	    }
             nDir.adjustPath(KUrl::AddTrailingSlash);
             _validFiles[project][nDir].validFiles << nFile.fileName();
         }
@@ -297,9 +306,13 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     if (config.hasKey(KERN_ARCH)) {
         KUrl archUrl(projectRoot, "arch/");
+	QString arch(config.readEntry(KERN_ARCH, ""));
+	KUrl archArchUrl(archUrl, arch);
+	archArchUrl.adjustPath(KUrl::AddTrailingSlash);
         rootFiles.validFiles << "arch";
         _validFiles[project][archUrl].lastUpdate = QDateTime::currentDateTime();
-        _validFiles[project][archUrl].validFiles << config.readEntry(KERN_ARCH, "");
+        _validFiles[project][archUrl].validFiles << arch;
+	_validFiles[project][archArchUrl].validFiles << "boot";
     }
 
     /*
@@ -426,32 +439,33 @@ KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
 
 KJob *KDevKernelPlugin::build(KDevelop::ProjectBaseItem *item)
 {
+    KConfigGroup makeConfig(item->project()->projectConfiguration()->group("MakeBuilder"));
+
     // TODO instead of this, have all, vmlinux, etc... as targets in the files view.
-    return jobForTarget(item->project());
+    return jobForTarget(item->project(), makeConfig.readEntry("Default Target").split(" ", QString::SkipEmptyParts));
 }
 
 KJob *KDevKernelPlugin::clean(KDevelop::ProjectBaseItem *item)
 {
-    return jobForTarget(item->project(), "clean");
+    return jobForTarget(item->project(), QStringList("clean"));
 }
 
 KJob *KDevKernelPlugin::configure(KDevelop::IProject *project)
 {
-    return jobForTarget(project, "xconfig");
+    return jobForTarget(project, QStringList("xconfig"));
 }
 
 KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 {
-    return jobForTarget(project, "mrproper");
+    return jobForTarget(project, QStringList("mrproper"));
 }
 
 KJob *KDevKernelPlugin::createDotConfig (KDevelop::IProject *project)
 {
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
     QString defConfig(config.readEntry(KERN_DEFCONFIG, ""));
-    qDebug() << "FOO" << defConfig;
     if (defConfig.isEmpty()) return 0;
-    return jobForTarget(project, defConfig + "_defconfig");
+    return jobForTarget(project, QStringList(defConfig + "_defconfig"));
 }
 
 MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
@@ -468,12 +482,11 @@ MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
     return makeVars;
 }
 
-KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QString &target)
+KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QStringList &targets)
 {
     if (_builder) {
         return _builder->executeMakeTargets(project->projectItem(),
-                                            target.isEmpty() ? QStringList() : QStringList(target),
-                                            makeVarsForProject(project));
+                                            targets, makeVarsForProject(project));
     }
     else return 0;
 }
