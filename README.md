@@ -18,9 +18,11 @@ Features
 
 Installing
 ----------
-This plugin requires KDevelop 4.6.
+This plugin requires KDevelop 4.7.
 
 Just typing `cmake . && make && sudo make install` should be enough to have the project installed. Then in KDevelop, do "Project -> Open/Import Project..." and select the root Makefile of your Linux kernel. When prompted for the type of the project, choose "Linux Kernel".
+
+Then open the project's configuration and in the "Linux Kernel" pane select your kernel configuration file. You will then need to restart KDevelop so the right kernel files are parsed with the right defines.
 
 Limitations
 -----------
