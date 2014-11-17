@@ -19,7 +19,6 @@
 #include "kdevkernelconfig.h"
 
 #include <interfaces/icore.h>
-#include <interfaces/iprojectcontroller.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
 #include <interfaces/iplugincontroller.h>
@@ -284,8 +283,7 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
         // Populate a drop down list with all the _defconfig options, plus one "no change"
         // if there is already a .config file in the build dir. When dialog closes and a
         // defconfig is selected, run make to create it in the build dir.
-        KDevelop::IProjectController *pc = KDevelop::ICore::self()->projectController();
-        pc->configureProject(project);
+        //KDevelop::ICore::self()->projectController()->configureProject(project);
     }
 
     // Standard definitions
