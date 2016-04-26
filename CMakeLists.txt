@@ -1,7 +1,19 @@
+cmake_minimum_required(VERSION 2.8.12)
+
 project(kdevkernel)
 
-find_package(KDE4 4.7.0 REQUIRED)
-find_package(KDevPlatform 1.2.60 REQUIRED)
+find_package (ECM 0.0.9 REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+set(KDEVELOP_VERSION "4.90.92")
+
+find_package(KF5 "5.4.0" REQUIRED COMPONENTS
+  Parts
+  TextEditor
+  ItemModels
+)
+
+find_package(KDevPlatform ${KDEVELOP_VERSION} REQUIRED)
+find_package(KDevelop ${KDEVELOP_VERSION} REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -18,36 +30,14 @@ include_directories(
 set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
 )
+kdevplatform_add_plugin(kdevkernel JSON kdevkernel.json SOURCES ${kdevkernel_plugin_SRCS})
 
-kde4_add_plugin(kdevkernel
-    ${kdevkernel_plugin_SRCS})
 target_link_libraries(kdevkernel
-    ${KDEVPLATFORM_PROJECT_LIBRARIES}
-    ${KDEVPLATFORM_INTERFACES_LIBRARIES}
-    ${KDEVPLATFORM_UTIL_LIBRARIES}
-    ${KDEVPLATFORM_OUTPUTVIEW_LIBRARIES}
+    KDev::Interfaces
+    KDev::Project
+    KDev::Util
+    KDev::OutputView
+    KDev::Serialization
 )
 
-set (kdevkernel_kcm_SRCS
-    kcm_kdevkernel.cpp
-    kdevkernelconfigwidget.cpp
-)
-
-kde4_add_ui_files(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
-kde4_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
-kde4_add_plugin(kcm_kdevkernel ${kdevkernel_kcm_SRCS})
-target_link_libraries(kcm_kdevkernel ${KDE4_KIO_LIBS} ${KDEVPLATFORM_INTERFACES_LIBRARIES} ${KDEVPLATFORM_LANGUAGE_LIBRARIES} ${KDEVPLATFORM_PROJECT_LIBRARIES} ${KDEVPLATFORM_UTIL_LIBRARIES})
-
-install(
-    TARGETS kdevkernel
-            kcm_kdevkernel
-    DESTINATION ${PLUGIN_INSTALL_DIR}
-)
-
-install(
-    FILES kdevkernel.desktop
-          kcm_kdevkernel.desktop
-    DESTINATION ${SERVICES_INSTALL_DIR}
-)
-
-add_subdirectory(icons)
+#add_subdirectory(icons)
