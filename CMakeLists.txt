@@ -3,7 +3,7 @@ project(kdevkernel)
 find_package(KDE4 4.7.0 REQUIRED)
 find_package(KDevPlatform 1.2.60 REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
 
 include_directories(
     ${KDE4_INCLUDES}
