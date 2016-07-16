@@ -1,3 +1,7 @@
+set(SERVICES_INSTALL_DIR /usr/share/kde4/services)
+set(DATA_INSTALL_DIR /usr/share/kde4/apps)
+set(PLUGIN_INSTALL_DIR /usr/lib/kde4)
+
 project(kdevkernel)
 
 find_package(KDE4 4.7.0 REQUIRED)
