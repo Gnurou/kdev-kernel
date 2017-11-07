@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project(kdevkernel)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(AUTOMOC ON)
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})

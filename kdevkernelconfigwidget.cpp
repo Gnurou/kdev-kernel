@@ -26,6 +26,7 @@
 #include <interfaces/iprojectcontroller.h>
 #include <interfaces/iruncontroller.h>
 #include <language/backgroundparser/parseprojectjob.h>
+#include <QUrl>
 
 KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget *parent, const QString &projectRoot) : QWidget(parent), _projectRoot(projectRoot)
 {
@@ -47,9 +48,11 @@ void KDevKernelConfigWidget::loadFrom(KConfig *config)
     KConfigGroup group(config->group(KERN_KGROUP));
 
     // Fill in the arch values
-    KUrl pRoot(_projectRoot);
-    pRoot.adjustPath(KUrl::AddTrailingSlash);
-    QDir archDir(KUrl(pRoot, "arch").toLocalFile());
+    //QUrl pRoot(_projectRoot);
+    QUrl pRoot(_projectRoot);
+    pRoot.adjustPath(QUrl::StripTrailingSlash );
+    //QDir archDir(QUrl(pRoot, "arch").toLocalFile());
+    QDir archDir(QUrl(pRoot, "arch").toLocalFile());
     archDir.setFilter(QDir::Dirs);
     foreach (const QString &archEntry, archDir.entryList()) {
         if (archEntry.startsWith('.')) continue;
@@ -57,7 +60,7 @@ void KDevKernelConfigWidget::loadFrom(KConfig *config)
     }
 
     if (group.hasKey(KERN_BDIR)) {
-        buildDir->setUrl(group.readEntry(KERN_BDIR, KUrl()));
+        buildDir->setUrl(group.readEntry(KERN_BDIR, QUrl()));
     } else {
         buildDir->setStartDir(pRoot);
     }
@@ -71,9 +74,9 @@ void KDevKernelConfigWidget::loadFrom(KConfig *config)
     }
 
     if (group.hasKey(KERN_CROSS)) {
-        crossCompiler->setUrl(KUrl(group.readEntry(KERN_CROSS, "") + "gcc"));
+        crossCompiler->setUrl(QUrl(group.readEntry(KERN_CROSS, "") + "gcc"));
     } else {
-        crossCompiler->setStartDir(KUrl("/usr/bin/"));
+        crossCompiler->setStartDir(QUrl("/usr/bin/"));
     }
 }
 
@@ -102,9 +105,9 @@ void KDevKernelConfigWidget::saveTo(KConfig *config, KDevelop::IProject *project
     // Remove the .config file if configuration changed. This will trigger
     // the corresponding make rule from the plugin the next time we parse.
     if (defconfig->currentText() != group.readEntry(KERN_DEFCONFIG, "")) {
-        KUrl buildDir(group.readEntry(KERN_BDIR, _projectRoot));
-        buildDir.adjustPath(KUrl::AddTrailingSlash);
-        QFile dotConfig(KUrl(buildDir, ".config").toLocalFile());
+        QUrl buildDir(group.readEntry(KERN_BDIR, _projectRoot));
+        buildDir.adjustPath(QUrl::AddTrailingSlash);
+        QFile dotConfig(QUrl(buildDir, ".config").toLocalFile());
         if (dotConfig.exists()) dotConfig.remove();
     }
 
@@ -125,9 +128,9 @@ void KDevKernelConfigWidget::archChanged (const QString &arch)
     defconfig->clear();
 
     // Fill in the configs values
-    KUrl pRoot(_projectRoot);
-    pRoot.adjustPath(KUrl::AddTrailingSlash);
-    QDir configDirs(KUrl(pRoot, QString("arch/%1/configs").arg(arch)).toLocalFile());
+    QUrl pRoot(_projectRoot);
+    pRoot.adjustPath(QUrl::AddTrailingSlash);
+    QDir configDirs(QUrl(pRoot, QString("arch/%1/configs").arg(arch)).toLocalFile());
     foreach (const QString &configFile, configDirs.entryList()) {
         if (configFile.startsWith('.')) continue;
         defconfig->addItem(configFile.left(configFile.size() - QString("_defconfig").size()));

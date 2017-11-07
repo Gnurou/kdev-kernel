@@ -18,7 +18,8 @@
 #ifndef KCM_KDEVKERNEL_H
 #define KCM_KDEVKERNEL_H
 
-#include <project/projectkcmodule.h>
+// Probably this got removed
+//#include <project/projectkcmodule.h>
 #include "kdevkernelplugin.h"
 
 class KDevKernelConfig;
