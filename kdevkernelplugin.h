@@ -21,7 +21,7 @@
 #include <project/interfaces/ibuildsystemmanager.h>
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
-#include <kdevelop/makebuilder/imakebuilder.h>
+#include <makebuilder/imakebuilder.h>
 #include <QVariant>
 #include <QSet>
 #include <QMap>
