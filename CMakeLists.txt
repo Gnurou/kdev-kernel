@@ -1,12 +1,32 @@
+cmake_minimum_required(VERSION 3.0.0)
+
 project(kdevkernel)
-
-find_package(KDE4 4.7.0 REQUIRED)
-find_package(KDevPlatform 1.2.60 REQUIRED)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+#find_package(KDE4 4.7.0 REQUIRED)
+find_package(ECM REQUIRED NO_MODULE)
+
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
+set(MIN_KDEV_VERSION "5.1.80")
+set(MIN_QT_VER "5.5.0")
+set(MIN_KF_VER "5.15.0")
+
+find_package(KDevelop ${MIN_KDEV_VERSION} REQUIRED)
+
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMAddTests)
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(FeatureSummary)
+
+find_package(Qt5 ${MIN_QT_VER} CONFIG REQUIRED Core Gui Widgets Test)
+find_package(KF5 ${MIN_KF_VER} REQUIRED COMPONENTS ItemModels TextEditor)
+find_package(KDevPlatform ${MIN_KDEV_VERSION} REQUIRED CONFIG)
+#message(STATUS "${KDEVPLATFORM_INCLUDE_DIR}")
+
 include_directories(
-    ${KDE4_INCLUDES}
+    ${KF5_INCLUDES}
     ${KDEVPLATFORM_INCLUDE_DIR}
     ${KDEVPLATFORM_INCLUDE_DIR}/../kdevelop
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -14,18 +34,19 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_PREFIX_PATH}/include/kdevelop
 )
-
+#message(STATUS ${KDEVPLATFORM_INCLUDE_DIR})
 set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
 )
 
-kde4_add_plugin(kdevkernel
+#kde4_add_plugin(kdevkernel
+kdevplatform_add_plugin(kdevkernel SOURCES
     ${kdevkernel_plugin_SRCS})
 target_link_libraries(kdevkernel
-    ${KDEVPLATFORM_PROJECT_LIBRARIES}
-    ${KDEVPLATFORM_INTERFACES_LIBRARIES}
-    ${KDEVPLATFORM_UTIL_LIBRARIES}
-    ${KDEVPLATFORM_OUTPUTVIEW_LIBRARIES}
+    KDev::Interfaces
+    KDev::Project
+    KDev::OutputView
+    KDev::Util
 )
 
 set (kdevkernel_kcm_SRCS
@@ -33,10 +54,15 @@ set (kdevkernel_kcm_SRCS
     kdevkernelconfigwidget.cpp
 )
 
-kde4_add_ui_files(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
-kde4_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
-kde4_add_plugin(kcm_kdevkernel ${kdevkernel_kcm_SRCS})
-target_link_libraries(kcm_kdevkernel ${KDE4_KIO_LIBS} ${KDEVPLATFORM_INTERFACES_LIBRARIES} ${KDEVPLATFORM_LANGUAGE_LIBRARIES} ${KDEVPLATFORM_PROJECT_LIBRARIES} ${KDEVPLATFORM_UTIL_LIBRARIES})
+ki18n_wrap_ui(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
+kconfig_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
+kdevplatform_add_plugin(kcm_kdevkernel SOURCES ${kdevkernel_kcm_SRCS})
+target_link_libraries(kcm_kdevkernel KF5::KIOCore 
+	KDev::Interfaces
+	KDev::Project
+	KDev::Language
+	KDev::Util
+	)
 
 install(
     TARGETS kdevkernel
@@ -51,3 +77,4 @@ install(
 )
 
 add_subdirectory(icons)
+feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
