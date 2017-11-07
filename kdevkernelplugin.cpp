@@ -18,7 +18,6 @@
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfig.h"
 
-#include <kdevelop/makebuilder/imakebuilder.h>
 #include <interfaces/icore.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
@@ -50,7 +49,7 @@ K_EXPORT_PLUGIN(KernelProjectFactory(
                 ))
 
 KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
-    : KDevelop::AbstractFileManagerPlugin(KernelProjectFactory::componentData(), parent)
+    : KDevelop::AbstractFileManagerPlugin( componentName(), parent)
 {
     Q_UNUSED(args);
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
@@ -79,7 +78,7 @@ KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseI
 KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
 {
     KUrl::List ret;
-    KUrl projectRoot = project->folder();
+    KUrl projectRoot = project->sender();
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
     KUrl bDir(KUrl(config.readEntry(KERN_BDIR, projectRoot)));
     bDir.adjustPath(KUrl::AddTrailingSlash);

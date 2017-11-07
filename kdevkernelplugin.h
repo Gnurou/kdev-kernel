@@ -18,16 +18,16 @@
 #ifndef KDEVKERNELPLUGIN_H
 #define KDEVKERNELPLUGIN_H
 
-#include <kdevelop/makebuilder/imakebuilder.h>
 #include <project/interfaces/ibuildsystemmanager.h>
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
-#include <make/imakebuilder.h>
+#include <kdevelop/makebuilder/imakebuilder.h>
 #include <QVariant>
 #include <QSet>
 #include <QMap>
 #include <QHash>
 #include <QDateTime>
+#include <kurl.h>
 
 class KJob;
 class IMakeBuilder;
