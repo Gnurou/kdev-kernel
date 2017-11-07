@@ -18,6 +18,7 @@
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfig.h"
 
+#include <kdevelop/makebuilder/imakebuilder.h>
 #include <interfaces/icore.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>

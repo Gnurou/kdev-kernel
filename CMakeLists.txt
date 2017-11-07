@@ -29,6 +29,7 @@ include_directories(
     ${KF5_INCLUDES}
     ${KDEVPLATFORM_INCLUDE_DIR}
     ${KDEVPLATFORM_INCLUDE_DIR}/../kdevelop
+    ${KDEVELOP_INCLUDE_DIR/makebuilder}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}

@@ -18,6 +18,7 @@
 #ifndef KDEVKERNELPLUGIN_H
 #define KDEVKERNELPLUGIN_H
 
+#include <kdevelop/makebuilder/imakebuilder.h>
 #include <project/interfaces/ibuildsystemmanager.h>
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
