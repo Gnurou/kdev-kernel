@@ -27,6 +27,7 @@
 #include <interfaces/iruncontroller.h>
 #include <language/backgroundparser/parseprojectjob.h>
 #include <QUrl>
+#include <kurl.h>
 
 KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget *parent, const QString &projectRoot) : QWidget(parent), _projectRoot(projectRoot)
 {
@@ -52,7 +53,7 @@ void KDevKernelConfigWidget::loadFrom(KConfig *config)
     QUrl pRoot(_projectRoot);
     pRoot.adjustPath(QUrl::StripTrailingSlash );
     //QDir archDir(QUrl(pRoot, "arch").toLocalFile());
-    QDir archDir(QUrl(pRoot, "arch").toLocalFile());
+    QDir archDir(KUrl(pRoot, "arch").toLocalFile());
     archDir.setFilter(QDir::Dirs);
     foreach (const QString &archEntry, archDir.entryList()) {
         if (archEntry.startsWith('.')) continue;

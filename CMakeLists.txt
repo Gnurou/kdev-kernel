@@ -55,26 +55,26 @@ target_link_libraries(kdevkernel
     KDev::Util
 )
 
-set (kdevkernel_kcm_SRCS
-    kcm_kdevkernel.cpp
-    kdevkernelconfigwidget.cpp
-)
+#set (kdevkernel_kcm_SRCS
+#    kcm_kdevkernel.cpp
+#    kdevkernelconfigwidget.cpp
+#)
 
-ki18n_wrap_ui(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
-kconfig_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
-kdevplatform_add_plugin(kcm_kdevkernel SOURCES ${kdevkernel_kcm_SRCS})
-target_link_libraries(kcm_kdevkernel KF5::KIOCore 
-	KDev::Interfaces
-	KDev::Project
-	KDev::Language
-	KDev::Util
-	)
+#ki18n_wrap_ui(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
+#kconfig_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
+#kdevplatform_add_plugin(kcm_kdevkernel SOURCES ${kdevkernel_kcm_SRCS})
+#target_link_libraries(kcm_kdevkernel KF5::KIOCore 
+#	KDev::Interfaces
+#	KDev::Project
+#	KDev::Language
+#	KDev::Util
+#	)
 
-install(
-    TARGETS kdevkernel
-            kcm_kdevkernel
-    DESTINATION ${PLUGIN_INSTALL_DIR}
-)
+#install(
+#    TARGETS kdevkernel
+#            kcm_kdevkernel
+#    DESTINATION ${PLUGIN_INSTALL_DIR}
+#)
 
 install(
     FILES kdevkernel.desktop
