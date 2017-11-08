@@ -21,7 +21,7 @@
 // Probably this got removed
 //#include <project/projectkcmodule.h>
 #include "kdevkernelplugin.h"
-#include <project/p>
+//#include <project/p>
 
 class KDevKernelConfig;
 
