@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KDevKernelConfigWidget</class>
- <widget class="QWidget" name="KDevKernelConfigWidget">
+ <class>KDevKernel::ProjectConfigPage</class>
+ <widget class="QWidget" name="KDevKernel::ProjectConfigPage">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>362</width>
-    <height>308</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>You can specify a build directory if you build your kernel out of source.</string>
+         <string>&amp;You can specify a build directory if you build your kernel out of source.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -119,7 +119,7 @@
   </customwidget>
   <customwidget>
    <class>KUrlRequester</class>
-   <extends>QFrame</extends>
+   <extends>QWidget</extends>
    <header>kurlrequester.h</header>
   </customwidget>
  </customwidgets>

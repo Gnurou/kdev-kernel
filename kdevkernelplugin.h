@@ -106,6 +106,8 @@ public:
 
     virtual KJob *createDotConfig(KDevelop::IProject *project);
 
+    int perProjectConfigPages() const override;
+    KDevelop::ConfigPage* perProjectConfigPage(int number, const KDevelop::ProjectConfigOptions& options, QWidget* parent) override;
 
 protected:
     virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);

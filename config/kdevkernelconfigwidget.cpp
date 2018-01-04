@@ -27,7 +27,6 @@
 #include <interfaces/iruncontroller.h>
 #include <language/backgroundparser/parseprojectjob.h>
 #include <QUrl>
-#include <kurl.h>
 
 KDevKernelConfigWidget::KDevKernelConfigWidget(QWidget *parent, const QString &projectRoot) : QWidget(parent), _projectRoot(projectRoot)
 {
@@ -51,9 +50,9 @@ void KDevKernelConfigWidget::loadFrom(KConfig *config)
     // Fill in the arch values
     //QUrl pRoot(_projectRoot);
     QUrl pRoot(_projectRoot);
-    pRoot.adjustPath(QUrl::StripTrailingSlash );
+//     pRoot.adjustPath(QUrl::StripTrailingSlash );
     //QDir archDir(QUrl(pRoot, "arch").toLocalFile());
-    QDir archDir(KUrl(pRoot, "arch").toLocalFile());
+    QDir archDir(QUrl(pRoot).resolved(QUrl("arch")).toLocalFile());
     archDir.setFilter(QDir::Dirs);
     foreach (const QString &archEntry, archDir.entryList()) {
         if (archEntry.startsWith('.')) continue;
@@ -107,8 +106,8 @@ void KDevKernelConfigWidget::saveTo(KConfig *config, KDevelop::IProject *project
     // the corresponding make rule from the plugin the next time we parse.
     if (defconfig->currentText() != group.readEntry(KERN_DEFCONFIG, "")) {
         QUrl buildDir(group.readEntry(KERN_BDIR, _projectRoot));
-        buildDir.adjustPath(QUrl::AddTrailingSlash);
-        QFile dotConfig(QUrl(buildDir, ".config").toLocalFile());
+//         buildDir.adjustPath(QUrl::AddTrailingSlash);
+        QFile dotConfig(QUrl(buildDir).resolved(QUrl(".config")).toLocalFile());
         if (dotConfig.exists()) dotConfig.remove();
     }
 
@@ -130,8 +129,8 @@ void KDevKernelConfigWidget::archChanged (const QString &arch)
 
     // Fill in the configs values
     QUrl pRoot(_projectRoot);
-    pRoot.adjustPath(QUrl::AddTrailingSlash);
-    QDir configDirs(QUrl(pRoot, QString("arch/%1/configs").arg(arch)).toLocalFile());
+//     pRoot.adjustPath(QUrl::AddTrailingSlash);
+    QDir configDirs(QUrl(pRoot).resolved(QUrl(QString("arch/%1/configs").arg(arch))).toLocalFile());
     foreach (const QString &configFile, configDirs.entryList()) {
         if (configFile.startsWith('.')) continue;
         defconfig->addItem(configFile.left(configFile.size() - QString("_defconfig").size()));

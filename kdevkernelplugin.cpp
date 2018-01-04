@@ -18,19 +18,23 @@
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfig.h"
 
+#include "config/projectconfigpage.h"
+
 #include <interfaces/icore.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
 #include <interfaces/iplugincontroller.h>
 #include <interfaces/iprojectcontroller.h>
 #include <project/projectmodel.h>
+#include <project/projectconfigpage.h>
+
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <KAboutData>
 #include <KConfigGroup>
 #include <KProcess>
-#include <QObject>
 
+#include <QObject>
 #include <QFile>
 #include <QFileInfo>
 #include <QtDebug>
@@ -526,4 +530,19 @@ QList<KDevelop::IProjectBuilder *> KDevKernelPlugin::additionalBuilderPlugins(KD
 	return ret;
 }
 
+int KDevKernelPlugin::perProjectConfigPages() const
+{
+    return 1; // TODO 1 or 0 ? It shows up with 1 when in a KDevKernel project, with 0 it doesn't
+}
+
+KDevelop::ConfigPage* KDevKernelPlugin::perProjectConfigPage(int number, const KDevelop::ProjectConfigOptions& options, QWidget* parent)
+{
+    if (number != 0) {
+        return nullptr;
+    }
+
+    return new KDevKernel::ProjectConfigPage(this, options.project, parent);
+}
+
+// needed for QObject class created from K_PLUGIN_FACTORY_WITH_JSON
 #include "kdevkernelplugin.moc"

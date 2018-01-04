@@ -2,16 +2,18 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project(kdevkernel)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(AUTOMOC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
+# TODO Check these min versions
 set(MIN_KDEV_VERSION "5.1.80")
 set(MIN_QT_VER "5.5.0")
 set(MIN_KF_VER "5.15.0")
 
-#Find what is the prefix of the KDevelop installation
+# Find what is the prefix of the KDevelop installation
 set(KDevelop_Include_DIR "include/kdevelop")
 find_path(KDevelop_PREFIX ${KDevelop_Include_DIR})
 set(KDevelop_Include_Full_DIR ${KDevelop_PREFIX}/${KDevelop_Include_DIR})
@@ -45,6 +47,16 @@ include_directories(
 
 set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
+
+    config/projectconfigpage.cpp
+)
+
+ki18n_wrap_ui(kdevkernel_plugin_SRCS
+    config/projectconfigpage.ui
+)
+
+kconfig_add_kcfg_files(kdevkernel_plugin_SRCS
+    config/projectconfig.kcfgc
 )
 
 kdevplatform_add_plugin(kdevkernel JSON kdevkernel.json SOURCES ${kdevkernel_plugin_SRCS})
@@ -55,33 +67,6 @@ target_link_libraries(kdevkernel
     KDev::OutputView
     KDev::Util
 )
-
-#set (kdevkernel_kcm_SRCS
-#    kcm_kdevkernel.cpp
-#    kdevkernelconfigwidget.cpp
-#)
-
-#ki18n_wrap_ui(kdevkernel_kcm_SRCS kdevkernelconfigwidget.ui)
-#kconfig_add_kcfg_files(kdevkernel_kcm_SRCS kcfg_kdevkernelconfig.kcfgc)
-#kdevplatform_add_plugin(kcm_kdevkernel SOURCES ${kdevkernel_kcm_SRCS})
-#target_link_libraries(kcm_kdevkernel KF5::KIOCore 
-#	KDev::Interfaces
-#	KDev::Project
-#	KDev::Language
-#	KDev::Util
-#	)
-
-#install(
-#    TARGETS kdevkernel
-#            kcm_kdevkernel
-#    DESTINATION ${PLUGIN_INSTALL_DIR}
-#)
-
-#install(
-#    FILES kdevkernel.desktop
-#          kcm_kdevkernel.desktop
-#    DESTINATION ${SERVICES_INSTALL_DIR}
-#)
 
 add_subdirectory(icons)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
