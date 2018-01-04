@@ -46,8 +46,7 @@ set(kdevkernel_plugin_SRCS
     kdevkernelplugin.cpp
 )
 
-kdevplatform_add_plugin(kdevkernel SOURCES
-    ${kdevkernel_plugin_SRCS})
+kdevplatform_add_plugin(kdevkernel JSON kdevkernel.json SOURCES ${kdevkernel_plugin_SRCS})
 
 target_link_libraries(kdevkernel
     KDev::Interfaces
@@ -77,11 +76,11 @@ target_link_libraries(kdevkernel
 #    DESTINATION ${PLUGIN_INSTALL_DIR}
 #)
 
-install(
-    FILES kdevkernel.desktop
-          kcm_kdevkernel.desktop
-    DESTINATION ${SERVICES_INSTALL_DIR}
-)
+#install(
+#    FILES kdevkernel.desktop
+#          kcm_kdevkernel.desktop
+#    DESTINATION ${SERVICES_INSTALL_DIR}
+#)
 
-add_subdirectory(icons)
+#add_subdirectory(icons)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

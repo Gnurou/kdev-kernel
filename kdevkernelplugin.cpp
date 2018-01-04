@@ -35,7 +35,7 @@
 #include <QFileInfo>
 #include <QtDebug>
 
-K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(KernelProjectFactory, "kdevkernel.json", registerPlugin<KDevKernelPlugin>();)
 /*K_EXPORT_PLUGIN(KernelProjectFactory(
                     KAboutData("kdevkernel", "kdevkernel",
                                ki18n("Linux Kernel"),

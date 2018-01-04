@@ -1,0 +1,34 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "gnurou@gmail.com",
+                "Name": "Alexandre Courbot"
+            },
+            {
+                "Email": "luca@z3ntu.xyz",
+                "Name": "Luca Weiss"
+            }
+        ],
+        "Category": "Project Management",
+        "Description": "Project Manager for editing the Linux Kernel",
+        "Icon": "linux",
+        "Id": "KDevKernel",
+        "License": "GPL",
+        "Name": "Linux Kernel Project Manager",
+        "ServiceTypes": [
+            "KDevelop/Plugin"
+        ]
+    },
+    "X-KDevelop-Category": "Project",
+    "X-KDevelop-IRequired": [
+        "org.kdevelop.IMakeBuilder"
+    ],
+    "X-KDevelop-Interfaces": [
+        "org.kdevelop.IProjectBuilder",
+        "org.kdevelop.IProjectFileManager",
+        "org.kdevelop.IBuildSystemManager"
+    ],
+    "X-KDevelop-LoadMode": "AlwaysOn",
+    "X-KDevelop-Mode": "GUI"
+}
