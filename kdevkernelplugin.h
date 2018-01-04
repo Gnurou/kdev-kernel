@@ -27,7 +27,6 @@
 #include <QMap>
 #include <QHash>
 #include <QDateTime>
-#include <kurl.h>
 
 class KJob;
 class IMakeBuilder;
@@ -57,19 +56,19 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
 private:
     IMakeBuilder *_builder;
 
-    mutable QMap<KDevelop::IProject *, QMap<KUrl, ValidFilesList > > _validFiles;
+    mutable QMap<KDevelop::IProject *, QMap<QUrl, ValidFilesList > > _validFiles;
     mutable QMap<KDevelop::IProject *, QStringList> _machDirs;
     mutable QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
 
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
      */
-    void parseDotConfig(KDevelop::IProject *project, const KUrl &dotconfig, QHash<QString, QString> &_defs);
+    void parseDotConfig(KDevelop::IProject *project, const QUrl &dotconfig, QHash<QString, QString> &_defs);
     /**
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefile(const KUrl &dir, KDevelop::IProject *project) const;
+    void parseMakefile(const QUrl &dir, KDevelop::IProject *project) const;
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
@@ -80,7 +79,7 @@ public:
     // IBuildSystemManager interface
     virtual KDevelop::IProjectBuilder *builder() const;
     virtual KDevelop::Path::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
-    virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
+    virtual KDevelop::Path::List includeDirectories(KDevelop::IProject *project) const;
     virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const;
     virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent);
     virtual bool removeTarget(KDevelop::ProjectTargetItem *target);

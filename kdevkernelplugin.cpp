@@ -27,6 +27,7 @@
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <KAboutData>
+#include <KConfigGroup>
 #include <KProcess>
 #include <QObject>
 
@@ -72,33 +73,33 @@ KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
 
 KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
-    return KDevelop::toPathList(includeDirectories(item->project()));
+    return includeDirectories(item->project());
 }
 
-KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
+KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
 {
-    KUrl::List ret;
-    KUrl projectRoot = project->sender();
+    KDevelop::Path::List ret;
+    KDevelop::Path projectRoot = project->path();
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    KUrl bDir(KUrl(config.readEntry(KERN_BDIR, projectRoot)));
-    bDir.adjustPath(KUrl::AddTrailingSlash);
+    KDevelop::Path bDir(config.readEntry(KERN_BDIR, projectRoot));
+//     bDir.adjustPath(QUrl::AddTrailingSlash);
 
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
-    ret << KUrl(projectRoot, "include");
+    ret << KDevelop::Path(projectRoot, "/include");
     if (bDir != projectRoot)
-        ret << KUrl(bDir, "include");
+        ret << KDevelop::Path(bDir, "include");
 
     if (config.hasKey(KERN_ARCH)) {
         QString arch(config.readEntry(KERN_ARCH));
-        KUrl archUrl(projectRoot, "arch/");
-        ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
+        KDevelop::Path archUrl(projectRoot, "arch/");
+        ret << KDevelop::Path(projectRoot, QString("arch/%1/include").arg(arch));
         foreach (const QString & machDir, _machDirs[project]) {
-            ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
+            ret << KDevelop::Path(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
         }
 
         // Build-specific generated includes
-        ret << KUrl(bDir, QString("arch/%1/include/generated").arg(arch));
+        ret << KDevelop::Path(bDir, QString("arch/%1/include/generated").arg(arch));
     }
 
     // TODO /usr/include and such should not be looked for
@@ -134,7 +135,7 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
             }
             vars += conf + "_defconfig";
             KProcess *process = new KProcess();
-            process->setWorkingDirectory(project->folder().toLocalFile());
+            process->setWorkingDirectory(project->path().toLocalFile());
             process->setProgram("make", vars);
             process->execute();
             delete process;
@@ -264,7 +265,7 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
 
 KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *project)
 {
-    KUrl projectRoot(project->folder());
+    KUrl projectRoot(project->path());
     projectRoot.adjustPath(KUrl::AddTrailingSlash);
     KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
     KUrl buildRoot = config.readEntry(KERN_BDIR, projectRoot);
@@ -401,7 +402,7 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
 
     if (valid);
     // Documentation too
-    else if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) valid = true;
+    else if (lFile.startsWith(KUrl(project->path(), "Documentation/").toLocalFile())) valid = true;
     // Same thing for .h files and Makefiles
     else if (lFile.endsWith(".h") || lFile.endsWith("/Makefile")) valid = true;
     // And KConfig files
@@ -411,7 +412,7 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
     else {
         KConfigGroup config = project->projectConfiguration()->group(KERN_KGROUP);
         QStringList vFiles(config.readEntry(KERN_VALIDFILES, QStringList()));
-        KUrl pRoot(project->folder());
+        KUrl pRoot(project->path());
         pRoot.adjustPath(KUrl::AddTrailingSlash);
         QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()));
         if (vFiles.contains(fPath)) valid = true;
