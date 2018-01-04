@@ -108,6 +108,12 @@ KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *pr
     return ret;
 }
 
+KDevelop::Path::List KDevKernelPlugin::frameworkDirectories(KDevelop::ProjectBaseItem *item) const
+{
+    Q_UNUSED(item)
+    return {};
+}
+
 QHash<QString, QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
     return _defines[item->project()];
@@ -377,6 +383,12 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
     return false;
 }
 
+bool KDevKernelPlugin::hasBuildInfo(KDevelop::ProjectBaseItem *item) const
+{
+    Q_UNUSED(item)
+    return false;
+}
+
 bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const
 {
     Q_UNUSED(isFolder)
@@ -435,6 +447,12 @@ KDevelop::Path KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item)
     return KDevelop::Path(buildDir);
 }
 
+QString KDevKernelPlugin::extraArguments(KDevelop::ProjectBaseItem *item) const
+{
+    Q_UNUSED(item)
+    return {};
+}
+
 KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item, const QUrl &specificPrefix)
 {
     Q_UNUSED(item)
@@ -476,6 +494,7 @@ KJob *KDevKernelPlugin::createDotConfig (KDevelop::IProject *project)
 
 MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
 {
+    Q_UNUSED(project)
     MakeVariables makeVars;
     KSharedConfigPtr config = KSharedConfig::openConfig();
     KConfigGroup cg(config, KERN_KGROUP);

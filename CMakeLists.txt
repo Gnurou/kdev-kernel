@@ -48,6 +48,7 @@ set(kdevkernel_plugin_SRCS
 
 kdevplatform_add_plugin(kdevkernel SOURCES
     ${kdevkernel_plugin_SRCS})
+
 target_link_libraries(kdevkernel
     KDev::Interfaces
     KDev::Project
