@@ -56,19 +56,19 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
 private:
     IMakeBuilder *_builder;
 
-    mutable QMap<KDevelop::IProject *, QMap<QUrl, ValidFilesList > > _validFiles;
+    mutable QMap<KDevelop::IProject *, QMap<KDevelop::Path, ValidFilesList > > _validFiles;
     mutable QMap<KDevelop::IProject *, QStringList> _machDirs;
     mutable QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
 
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
      */
-    void parseDotConfig(KDevelop::IProject *project, const QUrl &dotconfig, QHash<QString, QString> &_defs);
+    void parseDotConfig(KDevelop::IProject *project, const KDevelop::Path &dotconfig, QHash<QString, QString> &_defs);
     /**
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefile(const QUrl &dir, KDevelop::IProject *project) const;
+    void parseMakefile(const KDevelop::Path &dir, KDevelop::IProject *project) const;
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
