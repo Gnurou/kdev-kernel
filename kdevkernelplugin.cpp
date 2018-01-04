@@ -50,7 +50,7 @@ K_PLUGIN_FACTORY_WITH_JSON(KernelProjectFactory, "kdevkernel.json", registerPlug
                 ))*/
 
 KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
-    : KDevelop::AbstractFileManagerPlugin( componentName(), parent)
+    : KDevelop::AbstractFileManagerPlugin(QStringLiteral("kdevkernel"), parent, args)
 {
     Q_UNUSED(args);
     /*KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
