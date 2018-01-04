@@ -12,7 +12,7 @@
         ],
         "Category": "Project Management",
         "Description": "Project Manager for editing the Linux Kernel",
-        "Icon": "linux",
+        "Icon": "kdevkernel",
         "Id": "KDevKernel",
         "License": "GPL",
         "Name": "Linux Kernel Project Manager",

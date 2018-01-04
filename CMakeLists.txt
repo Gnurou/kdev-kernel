@@ -23,6 +23,7 @@ message(STATUS "KDevPlatform headers   : " ${KDevPlatform_Include_Full_DIR})
 
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMAddTests)
+include(ECMInstallIcons)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(FeatureSummary)
@@ -82,5 +83,5 @@ target_link_libraries(kdevkernel
 #    DESTINATION ${SERVICES_INSTALL_DIR}
 #)
 
-#add_subdirectory(icons)
+add_subdirectory(icons)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
