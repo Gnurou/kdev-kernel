@@ -15,30 +15,48 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KCM_KDEVKERNEL_H
-#define KCM_KDEVKERNEL_H
+#ifndef KDEVKERNEL_PROJECTCONFIGPAGE_H
+#define KDEVKERNEL_PROJECTCONFIGPAGE_H
 
-#include <project/projectkcmodule.h>
-#include "kdevkernelplugin.h"
+#include "interfaces/configpage.h"
 
-class KDevKernelConfig;
+namespace KDevelop
+{
+class IProject;
+class Path;
+}
 
-class KDevKernelKCModule : public ProjectKCModule<KDevKernelConfig>
+namespace KDevKernel
+{
+
+namespace Ui
+{
+class ProjectConfigPage;
+}
+
+class ProjectConfigPage : public KDevelop::ConfigPage
 {
     Q_OBJECT
+
 public:
-    KDevKernelKCModule(QWidget *parent, const QVariantList &args = QVariantList());
-    virtual ~KDevKernelKCModule();
+    ProjectConfigPage(KDevelop::IPlugin* plugin, KDevelop::IProject* project, QWidget* parent);
+    ~ProjectConfigPage() override;
 
-    virtual void defaults();
-    virtual void save();
-    virtual void load();
+    QString name() const override;
+    QString fullName() const override;
+    QIcon icon() const override;
 
-public slots:
-    void dataChanged();
+    void apply() override;
+    void reset() override;
+
+private Q_SLOTS:
+    void archChanged(const QString &arch);
 
 private:
-    class KDevKernelConfigWidget *configWidget;
+    QScopedPointer<Ui::ProjectConfigPage> ui;
+    KDevelop::IProject* project;
 };
 
-#endif
+}
+
+#endif // KDEVKERNEL_PROJECTCONFIGPAGE_H

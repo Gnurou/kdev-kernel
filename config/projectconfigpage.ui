@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KDevKernelConfigWidget</class>
- <widget class="QWidget" name="KDevKernelConfigWidget">
+ <class>KDevKernel::ProjectConfigPage</class>
+ <widget class="QWidget" name="KDevKernel::ProjectConfigPage">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>362</width>
-    <height>308</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,18 +23,18 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>You can specify a build directory if you build your kernel out of source.</string>
+         <string>&amp;You can specify a build directory if you build your kernel out of source.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
         </property>
         <property name="buddy">
-         <cstring>buildDir</cstring>
+         <cstring>kcfg_buildDir</cstring>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="KUrlRequester" name="buildDir">
+       <widget class="KUrlRequester" name="kcfg_buildDir">
         <property name="mode">
          <set>KFile::Directory|KFile::LocalOnly</set>
         </property>
@@ -59,7 +59,7 @@
          </widget>
         </item>
         <item>
-         <widget class="KComboBox" name="arch">
+         <widget class="KComboBox" name="kcfg_arch">
           <property name="toolTip">
            <string>Target architecture of the kernel. This will set the ARCH variable accordingly.</string>
           </property>
@@ -77,7 +77,7 @@
          </widget>
         </item>
         <item>
-         <widget class="KComboBox" name="defconfig"/>
+         <widget class="KComboBox" name="kcfg_defconfig"/>
         </item>
        </layout>
       </item>
@@ -91,7 +91,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="KUrlRequester" name="crossCompiler"/>
+       <widget class="KUrlRequester" name="kcfg_crossCompiler"/>
       </item>
      </layout>
     </widget>
@@ -119,7 +119,7 @@
   </customwidget>
   <customwidget>
    <class>KUrlRequester</class>
-   <extends>QFrame</extends>
+   <extends>QWidget</extends>
    <header>kurlrequester.h</header>
   </customwidget>
  </customwidgets>

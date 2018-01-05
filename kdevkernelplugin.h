@@ -21,7 +21,7 @@
 #include <project/interfaces/ibuildsystemmanager.h>
 #include <project/interfaces/iprojectbuilder.h>
 #include <project/abstractfilemanagerplugin.h>
-#include <make/imakebuilder.h>
+#include <makebuilder/imakebuilder.h>
 #include <QVariant>
 #include <QSet>
 #include <QMap>
@@ -40,8 +40,7 @@ class IProject;
 class Path;
 }
 
-struct ValidFilesList
-{
+struct ValidFilesList {
     QDateTime lastUpdate;
     QSet<QString> validFiles;
 };
@@ -54,59 +53,64 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
     Q_INTERFACES(KDevelop::IBuildSystemManager)
 
 private:
-    IMakeBuilder *_builder;
+    IMakeBuilder *m_builder;
 
-    mutable QMap<KDevelop::IProject *, QMap<KUrl, ValidFilesList > > _validFiles;
+    mutable QMap<KDevelop::IProject *, QMap<KDevelop::Path, ValidFilesList > > _validFiles;
     mutable QMap<KDevelop::IProject *, QStringList> _machDirs;
     mutable QMap<KDevelop::IProject *, QHash<QString, QString> > _defines;
 
     /**
      * Parse the given configuration file and set the kernel definitions accordingly.
      */
-    void parseDotConfig(KDevelop::IProject *project, const KUrl &dotconfig, QHash<QString, QString> &_defs);
+    void parseDotConfig(KDevelop::IProject *project, const KDevelop::Path &dotconfig, QHash<QString, QString> &_defs);
     /**
      * Parse the Makefiles and build the list of files we need to include according
      * to the definitions that have been parsed by parseDotConfig.
      */
-    void parseMakefile(const KUrl &dir, KDevelop::IProject *project) const;
+    void parseMakefile(const KDevelop::Path &dir, KDevelop::IProject *project) const;
 
 public:
     KDevKernelPlugin(QObject *parent, const QVariantList &args);
 
     // AbstractFileManagerPlugin interface
-    virtual KDevelop::ProjectFolderItem *import(KDevelop::IProject *project);
+    virtual KDevelop::ProjectFolderItem *import(KDevelop::IProject *project) override;
 
     // IBuildSystemManager interface
-    virtual KDevelop::IProjectBuilder *builder() const;
-    virtual KDevelop::Path::List includeDirectories(KDevelop::ProjectBaseItem *item) const;
-    virtual KUrl::List includeDirectories(KDevelop::IProject *project) const;
-    virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const;
-    virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent);
-    virtual bool removeTarget(KDevelop::ProjectTargetItem *target);
-    virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *item) const;
-    virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target);
-    virtual bool removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files);
+    virtual KDevelop::IProjectBuilder *builder() const override;
+    virtual KDevelop::Path::List includeDirectories(KDevelop::ProjectBaseItem *item) const override;
+    virtual KDevelop::Path::List frameworkDirectories(KDevelop::ProjectBaseItem *item) const override;
+    virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const override;
+    virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent) override;
+    virtual bool removeTarget(KDevelop::ProjectTargetItem *target) override;
+    virtual QList<KDevelop::ProjectTargetItem *> targets(KDevelop::ProjectFolderItem *item) const override;
+    virtual bool addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target) override;
+    virtual bool removeFilesFromTargets(const QList<KDevelop::ProjectFileItem *> &files) override;
+    virtual bool hasBuildInfo(KDevelop::ProjectBaseItem *item) const override;
     /**
      * A file is valid if it belongs to the list of files that are enabled through the kernel configuration.
      * A directory is valid if it contains any file we are interested in.
      */
-    virtual bool isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const;
-    virtual KDevelop::Path buildDirectory(KDevelop::ProjectBaseItem *item) const;
+    virtual bool isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const override;
+    virtual KDevelop::Path buildDirectory(KDevelop::ProjectBaseItem *item) const override;
+    virtual QString extraArguments(KDevelop::ProjectBaseItem *item) const override;
 
     // IProjectBuilder interface
-    virtual KJob *install(KDevelop::ProjectBaseItem *project);
-    virtual KJob *build(KDevelop::ProjectBaseItem *project);
-    virtual KJob *clean(KDevelop::ProjectBaseItem *project);
-    virtual KJob *configure(KDevelop::IProject *project);
-    virtual KJob *prune(KDevelop::IProject *project);
-    virtual QList<KDevelop::IProjectBuilder *> additionalBuilderPlugins(KDevelop::IProject *project) const;
+    virtual KJob *install(KDevelop::ProjectBaseItem *project, const QUrl &specificPrefix = {}) override;
+    virtual KJob *build(KDevelop::ProjectBaseItem *project) override;
+    virtual KJob *clean(KDevelop::ProjectBaseItem *project) override;
+    virtual KJob *configure(KDevelop::IProject *project) override;
+    virtual KJob *prune(KDevelop::IProject *project) override;
+    virtual QList<KDevelop::IProjectBuilder *> additionalBuilderPlugins(KDevelop::IProject *project) const override;
 
     virtual KJob *createDotConfig(KDevelop::IProject *project);
 
+    int perProjectConfigPages() const override;
+    KDevelop::ConfigPage* perProjectConfigPage(int number, const KDevelop::ProjectConfigOptions& options, QWidget* parent) override;
 
 protected:
     virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);
     virtual KJob *jobForTarget(KDevelop::IProject *project, const QStringList &targets);
+    virtual KDevelop::Path::List includeDirectories(KDevelop::IProject *project) const;
 
 private slots:
     virtual void projectClosing(KDevelop::IProject *project);

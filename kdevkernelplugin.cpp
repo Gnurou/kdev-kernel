@@ -18,87 +18,76 @@
 #include "kdevkernelplugin.h"
 #include "kdevkernelconfig.h"
 
+#include "config/projectconfigpage.h"
+
 #include <interfaces/icore.h>
 #include <interfaces/iproject.h>
 #include <interfaces/iplugin.h>
 #include <interfaces/iplugincontroller.h>
 #include <interfaces/iprojectcontroller.h>
 #include <project/projectmodel.h>
+#include <project/projectconfigpage.h>
+
 #include <KPluginFactory>
 #include <KLocalizedString>
 #include <KAboutData>
+#include <KConfigGroup>
 #include <KProcess>
-#include <QObject>
 
+#include <QObject>
 #include <QFile>
 #include <QFileInfo>
 #include <QtDebug>
 
-K_PLUGIN_FACTORY(KernelProjectFactory, registerPlugin<KDevKernelPlugin>();)
-K_EXPORT_PLUGIN(KernelProjectFactory(
-                    KAboutData("kdevkernel", "kdevkernel",
-                               ki18n("Linux Kernel"),
-                               "0.1",
-                               ki18n("Linux Kernel Project Manager"),
-                               KAboutData::License_GPL,
-                               ki18n("Copyright (C) 2011-2013 Alexandre Courbot <gnurou@gmail.com>"),
-                               KLocalizedString(),
-                               "",
-                               "gnurou@gmail.com"
-                              )
-                ))
+K_PLUGIN_FACTORY_WITH_JSON(KernelProjectFactory, "kdevkernel.json", registerPlugin<KDevKernelPlugin>();)
 
 KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
-    : KDevelop::AbstractFileManagerPlugin(KernelProjectFactory::componentData(), parent)
+    : KDevelop::AbstractFileManagerPlugin(QStringLiteral("kdevkernel"), parent, args)
 {
     Q_UNUSED(args);
-    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBuildSystemManager)
-    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectFileManager)
-    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)
 
     IPlugin* i = core()->pluginController()->pluginForExtension("org.kdevelop.IMakeBuilder");
-    if (i)
-    {
-        _builder = i->extension<IMakeBuilder>();
-    }
-
-    connect(core()->projectController(), SIGNAL(projectClosing(KDevelop::IProject *)), this, SLOT(projectClosing(KDevelop::IProject *)));
+    Q_ASSERT(i);
+    m_builder = i->extension<IMakeBuilder>();
+    Q_ASSERT(m_builder);
 }
 
-KDevelop::IProjectBuilder *KDevKernelPlugin::builder() const
+KDevelop::IProjectBuilder* KDevKernelPlugin::builder() const
 {
+    /*Q_ASSERT(m_builder); // TODO I've seen this in kdevelop plugins, why doesn't this work?
+    return m_builder;*/
     return (KDevelop::IProjectBuilder *)(this);
 }
 
 KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::ProjectBaseItem *item) const
 {
-    return KDevelop::toPathList(includeDirectories(item->project()));
+    return includeDirectories(item->project());
 }
 
-KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
+KDevelop::Path::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) const
 {
-    KUrl::List ret;
-    KUrl projectRoot = project->folder();
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    KUrl bDir(KUrl(config.readEntry(KERN_BDIR, projectRoot)));
-    bDir.adjustPath(KUrl::AddTrailingSlash);
+    KDevelop::Path::List ret;
+    KDevelop::Path projectRoot = project->path();
+    KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+    KDevelop::Path bDir(cg.readEntry(KERN_BDIR, projectRoot.toUrl()));
+//     bDir.adjustPath(QUrl::AddTrailingSlash);
 
     // TODO cache for better efficiency - this should be built when loading a project
     // or when config changes
-    ret << KUrl(projectRoot, "include");
+    ret << KDevelop::Path(projectRoot, "include");
     if (bDir != projectRoot)
-        ret << KUrl(bDir, "include");
+        ret << KDevelop::Path(bDir, "include");
 
-    if (config.hasKey(KERN_ARCH)) {
-        QString arch(config.readEntry(KERN_ARCH));
-        KUrl archUrl(projectRoot, "arch/");
-        ret << KUrl(projectRoot, QString("arch/%1/include").arg(arch));
+    if (cg.hasKey(KERN_ARCH)) {
+        QString arch(cg.readEntry(KERN_ARCH));
+        KDevelop::Path archUrl(projectRoot, "arch/");
+        ret << KDevelop::Path(projectRoot, QString("arch/%1/include").arg(arch));
         foreach (const QString & machDir, _machDirs[project]) {
-            ret << KUrl(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
+            ret << KDevelop::Path(projectRoot, QString("arch/%1/%2/include").arg(arch).arg(machDir));
         }
 
         // Build-specific generated includes
-        ret << KUrl(bDir, QString("arch/%1/include/generated").arg(arch));
+        ret << KDevelop::Path(bDir, QString("arch/%1/include/generated").arg(arch));
     }
 
     // TODO /usr/include and such should not be looked for
@@ -106,12 +95,18 @@ KUrl::List KDevKernelPlugin::includeDirectories(KDevelop::IProject *project) con
     return ret;
 }
 
+KDevelop::Path::List KDevKernelPlugin::frameworkDirectories(KDevelop::ProjectBaseItem *item) const
+{
+    Q_UNUSED(item)
+    return {};
+}
+
 QHash<QString, QString> KDevKernelPlugin::defines(KDevelop::ProjectBaseItem *item) const
 {
     return _defines[item->project()];
 }
 
-void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &dotconfig, QHash<QString, QString> &_defs)
+void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KDevelop::Path &dotconfig, QHash<QString, QString> &_defs)
 {
     QFile dfile(dotconfig.toLocalFile());
     static QRegExp def("(\\w+)=(\"?[^\\n]+\"?)\n?");
@@ -122,8 +117,8 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
 
     // If the .config file does not exist, create it by invoking make.
     if (!dfile.exists()) {
-        KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-        QString conf(config.readEntry(KERN_DEFCONFIG, ""));
+        KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+        QString conf(cg.readEntry(KERN_DEFCONFIG, ""));
         if (!conf.isEmpty()) {
             MakeVariables makeVars(makeVarsForProject(project));
             QStringList vars;
@@ -134,7 +129,7 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
             }
             vars += conf + "_defconfig";
             KProcess *process = new KProcess();
-            process->setWorkingDirectory(project->folder().toLocalFile());
+            process->setWorkingDirectory(project->path().toLocalFile());
             process->setProgram("make", vars);
             process->execute();
             delete process;
@@ -167,12 +162,12 @@ void KDevKernelPlugin::parseDotConfig(KDevelop::IProject *project, const KUrl &d
 // TODO This is crap. Valid files should be stored in the project directly, and every
 // directory/file with includes should have a list of the valid files it added, and which
 // get removed from the global list as we reparse the Makefile/source file.
-void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *project) const
+void KDevKernelPlugin::parseMakefile(const KDevelop::Path &dir, KDevelop::IProject *project) const
 {
     static QRegExp objy("([\\w-]+)-([^+:= \t]*)[\t ]*\\+?:?=([^\\\\]+)\\\\?\n");
     static QRegExp repl("\\$\\((\\w_+)\\)");
     static QRegExp spTab("\t| ");
-    QFile makefile(KUrl(dir, "Makefile").toLocalFile());
+    QFile makefile(KDevelop::Path(dir, "Makefile").toLocalFile());
     ValidFilesList &validFiles = _validFiles[project][dir];
 
     validFiles.lastUpdate = QDateTime::currentDateTime();
@@ -230,30 +225,30 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
         }
     }
 
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    QString archDir(QString("arch/%1/").arg(config.readEntry(KERN_ARCH)));
+    KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+    QString archDir(QString("arch/%1/").arg(cg.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
-	else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
+        else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
         else if (file.endsWith("/")) file = file.left(file.size() - 1);
         // Some directories are specified from the source root in the arch dir
         if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
-             file = file.mid(archDir.size());
+            file = file.mid(archDir.size());
 
         // Sometimes files are referenced that are several directories below
         if (file.contains('/')) {
-            KUrl nFile(dir, file);
-            KUrl nDir(nFile.directory());
-	    // Add all the subdirectories
-	    KUrl nDir2(nDir);
-	    while (nDir2 != dir) {
-		    QString f(nDir2.fileName());
-		    QString d(nDir2.directory() + "/");
-		    _validFiles[project][d].validFiles << f;
-		    nDir2 = KUrl(d);
-	    }
-            nDir.adjustPath(KUrl::AddTrailingSlash);
-            _validFiles[project][nDir].validFiles << nFile.fileName();
+            KDevelop::Path nFile(KDevelop::Path(dir, file).toUrl());
+            KDevelop::Path nDir(nFile.parent());
+            // Add all the subdirectories
+            KDevelop::Path nDir2(nDir.toUrl());
+            while (nDir2 != dir) {
+                QString f(nDir2.toUrl().fileName());
+                KDevelop::Path d(nDir2.parent());
+                _validFiles[project][d].validFiles << f;
+                nDir2 = KDevelop::Path(d);
+            }
+//             nDir.adjustPath(KUrl::AddTrailingSlash);
+            _validFiles[project][nDir].validFiles << nFile.toUrl().fileName();
         }
         validFiles.validFiles << file;
 #ifdef DEBUG
@@ -264,11 +259,11 @@ void KDevKernelPlugin::parseMakefile(const KUrl &dir, KDevelop::IProject *projec
 
 KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *project)
 {
-    KUrl projectRoot(project->folder());
-    projectRoot.adjustPath(KUrl::AddTrailingSlash);
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    KUrl buildRoot = config.readEntry(KERN_BDIR, projectRoot);
-    buildRoot.adjustPath(KUrl::AddTrailingSlash);
+    KDevelop::Path projectRoot(project->path());
+//     projectRoot.adjustPath(KUrl::AddTrailingSlash);
+    KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+    KDevelop::Path buildRoot(cg.readEntry(KERN_BDIR, projectRoot.toUrl()));
+//     buildRoot.adjustPath(KUrl::AddTrailingSlash);
 
     // This effectively cleans up everything
     projectClosing(project);
@@ -279,7 +274,7 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     project->projectConfiguration()->group("MakeBuilder").writeEntry("Resolve Using Make", false);
 
     // If no .config file in the build directory, force user to configure to choose one
-    if (!QFile(KUrl(buildRoot, ".config").toLocalFile()).exists()) {
+    if (!QFile(KDevelop::Path(buildRoot, ".config").toLocalFile()).exists()) {
         // Populate a drop down list with all the _defconfig options, plus one "no change"
         // if there is already a .config file in the build dir. When dialog closes and a
         // defconfig is selected, run make to create it in the build dir.
@@ -290,27 +285,27 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
     QHash<QString, QString> &_defs = _defines[project];
     _defs["__KERNEL__"] = "";
 
-    if (config.hasKey(KERN_BDIR))
-        buildRoot = config.readEntry(KERN_BDIR, KUrl());
+    if (cg.hasKey(KERN_BDIR))
+        buildRoot = KDevelop::Path(cg.readEntry(KERN_BDIR, KDevelop::Path().toUrl()));
     else buildRoot = projectRoot;
 
-    buildRoot.adjustPath(KUrl::AddTrailingSlash);
-    parseDotConfig(project, KUrl(buildRoot, ".config"), _defs);
+//     buildRoot.adjustPath(KUrl::AddTrailingSlash);
+    parseDotConfig(project, KDevelop::Path(buildRoot, ".config"), _defs);
 
     _validFiles[project].clear();
 
     ValidFilesList &rootFiles = _validFiles[project][projectRoot];
     rootFiles.lastUpdate = QDateTime::currentDateTime();
 
-    if (config.hasKey(KERN_ARCH)) {
-        KUrl archUrl(projectRoot, "arch/");
-	QString arch(config.readEntry(KERN_ARCH, ""));
-	KUrl archArchUrl(archUrl, arch);
-	archArchUrl.adjustPath(KUrl::AddTrailingSlash);
+    if (cg.hasKey(KERN_ARCH)) {
+        KDevelop::Path archUrl(projectRoot, "arch/");
+        QString arch(cg.readEntry(KERN_ARCH, ""));
+        KDevelop::Path archArchUrl(archUrl, arch);
+// 	archArchUrl.adjustPath(KUrl::AddTrailingSlash);
         rootFiles.validFiles << "arch";
         _validFiles[project][archUrl].lastUpdate = QDateTime::currentDateTime();
         _validFiles[project][archUrl].validFiles << arch;
-	_validFiles[project][archArchUrl].validFiles << "boot";
+        _validFiles[project][archArchUrl].validFiles << "boot";
     }
 
     /*
@@ -344,7 +339,7 @@ KDevelop::ProjectTargetItem *KDevKernelPlugin::createTarget(const QString &targe
 {
     Q_UNUSED(target);
     Q_UNUSED(parent);
-    return 0;
+    return {};
 }
 
 bool KDevKernelPlugin::removeTarget(KDevelop::ProjectTargetItem *target)
@@ -356,7 +351,7 @@ bool KDevKernelPlugin::removeTarget(KDevelop::ProjectTargetItem *target)
 QList<KDevelop::ProjectTargetItem *> KDevKernelPlugin::targets(KDevelop::ProjectFolderItem *item) const
 {
     Q_UNUSED(item);
-    return QList<KDevelop::ProjectTargetItem *>();
+    return {};
 }
 
 bool KDevKernelPlugin::addFilesToTarget(const QList<KDevelop::ProjectFileItem *> &files, KDevelop::ProjectTargetItem *target)
@@ -372,17 +367,23 @@ bool KDevKernelPlugin::removeFilesFromTargets(const QList<KDevelop::ProjectFileI
     return false;
 }
 
+bool KDevKernelPlugin::hasBuildInfo(KDevelop::ProjectBaseItem *item) const
+{
+    Q_UNUSED(item)
+    return false;
+}
+
 bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const
 {
     Q_UNUSED(isFolder)
-    KUrl containingDir(url.toUrl().directory());
-    containingDir.adjustPath(KUrl::AddTrailingSlash);
+    KDevelop::Path containingDir(url.parent());
+//     containingDir.adjustPath(KUrl::AddTrailingSlash);
     QString file(url.toUrl().fileName());
     const ValidFilesList &validFiles(_validFiles[project][containingDir]);
     bool valid = false;
     static QRegExp Kconf("/Kconfig($|\\.?)");
     QTime curTime(QTime::currentTime());
-    QFileInfo mFile(KUrl(containingDir, "Makefile").toLocalFile());
+    QFileInfo mFile(KDevelop::Path(containingDir, "Makefile").toLocalFile());
 
     if (mFile.exists() && validFiles.lastUpdate <= mFile.lastModified()) {
         parseMakefile(containingDir, project);
@@ -391,8 +392,8 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
     QString lFile(url.toUrl().toLocalFile());
     // Files in include directories shall always be processed
     // TODO cache the include dirs list, this is inefficient
-    KUrl::List includeDirs(includeDirectories(project));
-    foreach (const KUrl & iUrl, includeDirs) {
+    KDevelop::Path::List includeDirs(includeDirectories(project));
+    foreach (const KDevelop::Path & iUrl, includeDirs) {
         if (lFile.startsWith(iUrl.toLocalFile())) {
             valid = true;
             break;
@@ -401,7 +402,7 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
 
     if (valid);
     // Documentation too
-    else if (lFile.startsWith(KUrl(project->folder(), "Documentation/").toLocalFile())) valid = true;
+    else if (lFile.startsWith(KDevelop::Path(project->path(), "Documentation/").toLocalFile())) valid = true;
     // Same thing for .h files and Makefiles
     else if (lFile.endsWith(".h") || lFile.endsWith("/Makefile")) valid = true;
     // And KConfig files
@@ -409,11 +410,11 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
     else if (validFiles.validFiles.contains(file)) valid = true;
     // Last ressort, the user-list of hardcoded files to accept
     else {
-        KConfigGroup config = project->projectConfiguration()->group(KERN_KGROUP);
-        QStringList vFiles(config.readEntry(KERN_VALIDFILES, QStringList()));
-        KUrl pRoot(project->folder());
-        pRoot.adjustPath(KUrl::AddTrailingSlash);
-        QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()));
+        KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+        QStringList vFiles(cg.readEntry(KERN_VALIDFILES, QStringList()));
+        KDevelop::Path pRoot(project->path());
+//         pRoot.adjustPath(KUrl::AddTrailingSlash);
+        QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()+1)); // +1 instead of AddTrailingSlash
         if (vFiles.contains(fPath)) valid = true;
     }
 
@@ -425,13 +426,20 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
 
 KDevelop::Path KDevKernelPlugin::buildDirectory(KDevelop::ProjectBaseItem *item) const
 {
-    KUrl buildDir(item->project()->projectItem()->url());
+    KDevelop::Path buildDir(item->project()->projectItem()->path());
     return KDevelop::Path(buildDir);
 }
 
-KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item)
+QString KDevKernelPlugin::extraArguments(KDevelop::ProjectBaseItem *item) const
 {
     Q_UNUSED(item)
+    return {};
+}
+
+KJob *KDevKernelPlugin::install(KDevelop::ProjectBaseItem *item, const QUrl &specificPrefix)
+{
+    Q_UNUSED(item)
+    Q_UNUSED(specificPrefix)
     return 0;
 }
 
@@ -460,42 +468,57 @@ KJob *KDevKernelPlugin::prune(KDevelop::IProject *project)
 
 KJob *KDevKernelPlugin::createDotConfig (KDevelop::IProject *project)
 {
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    QString defConfig(config.readEntry(KERN_DEFCONFIG, ""));
+    KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+    QString defConfig(cg.readEntry(KERN_DEFCONFIG, ""));
     if (defConfig.isEmpty()) return 0;
     return jobForTarget(project, QStringList(defConfig + "_defconfig"));
 }
 
 MakeVariables KDevKernelPlugin::makeVarsForProject(KDevelop::IProject* project)
 {
+    Q_UNUSED(project)
     MakeVariables makeVars;
-    KConfigGroup config(project->projectConfiguration()->group(KERN_KGROUP));
-    if (config.hasKey(KERN_BDIR))
-        makeVars << QPair<QString, QString>("O", KUrl(config.readEntry(KERN_BDIR)).toLocalFile());
-    if (config.hasKey(KERN_ARCH))
-        makeVars << QPair<QString, QString>("ARCH", config.readEntry(KERN_ARCH));
-    if (config.hasKey(KERN_CROSS))
-        makeVars << QPair<QString, QString>("CROSS_COMPILE", config.readEntry(KERN_CROSS));
+    KConfigGroup cg = project->projectConfiguration()->group(KERN_KGROUP);
+    if (cg.hasKey(KERN_BDIR))
+        makeVars << QPair<QString, QString>("O", KDevelop::Path(cg.readEntry(KERN_BDIR)).toLocalFile());
+    if (cg.hasKey(KERN_ARCH))
+        makeVars << QPair<QString, QString>("ARCH", cg.readEntry(KERN_ARCH));
+    if (cg.hasKey(KERN_CROSS))
+        makeVars << QPair<QString, QString>("CROSS_COMPILE", cg.readEntry(KERN_CROSS));
 
     return makeVars;
 }
 
 KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QStringList &targets)
 {
-    if (_builder) {
-        return _builder->executeMakeTargets(project->projectItem(),
-                                            targets, makeVarsForProject(project));
-    }
-    else return 0;
+    if (m_builder) {
+        return m_builder->executeMakeTargets(project->projectItem(),
+                                             targets, makeVarsForProject(project));
+    } else return 0;
 }
 
 QList<KDevelop::IProjectBuilder *> KDevKernelPlugin::additionalBuilderPlugins(KDevelop::IProject *project) const
 {
-	Q_UNUSED(project);
+    Q_UNUSED(project);
 
-	QList<KDevelop::IProjectBuilder *> ret;
-	ret << _builder;
-	return ret;
+    QList<KDevelop::IProjectBuilder *> ret;
+    ret << m_builder;
+    return ret;
 }
 
+int KDevKernelPlugin::perProjectConfigPages() const
+{
+    return 1; // TODO 1 or 0 ? It shows up with 1 when in a KDevKernel project, with 0 it doesn't
+}
+
+KDevelop::ConfigPage* KDevKernelPlugin::perProjectConfigPage(int number, const KDevelop::ProjectConfigOptions& options, QWidget* parent)
+{
+    if (number != 0) {
+        return nullptr;
+    }
+
+    return new KDevKernel::ProjectConfigPage(this, options.project, parent);
+}
+
+// needed for QObject class created from K_PLUGIN_FACTORY_WITH_JSON
 #include "kdevkernelplugin.moc"
