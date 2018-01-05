@@ -40,8 +40,7 @@ class IProject;
 class Path;
 }
 
-struct ValidFilesList
-{
+struct ValidFilesList {
     QDateTime lastUpdate;
     QSet<QString> validFiles;
 };

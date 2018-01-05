@@ -62,8 +62,7 @@ KDevKernelPlugin::KDevKernelPlugin(QObject *parent, const QVariantList &args)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IProjectBuilder)*/
 
     IPlugin* i = core()->pluginController()->pluginForExtension("org.kdevelop.IMakeBuilder");
-    if (i)
-    {
+    if (i) {
         _builder = i->extension<IMakeBuilder>();
     }
 
@@ -248,24 +247,24 @@ void KDevKernelPlugin::parseMakefile(const KDevelop::Path &dir, KDevelop::IProje
     QString archDir(QString("arch/%1/").arg(cg.readEntry(KERN_ARCH)));
     foreach (QString file, files) {
         if (file.endsWith(".o")) file = file.mid(0, file.size() - 2) + ".c";
-	else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
+        else if (file.endsWith(".dtb")) file = file.mid(0, file.size() - 4) + ".dts";
         else if (file.endsWith("/")) file = file.left(file.size() - 1);
         // Some directories are specified from the source root in the arch dir
         if (dir.toLocalFile().endsWith(archDir) && file.startsWith(archDir))
-             file = file.mid(archDir.size());
+            file = file.mid(archDir.size());
 
         // Sometimes files are referenced that are several directories below
         if (file.contains('/')) {
             KDevelop::Path nFile(KDevelop::Path(dir, file).toUrl());
             KDevelop::Path nDir(nFile.parent());
-	    // Add all the subdirectories
-	    KDevelop::Path nDir2(nDir.toUrl());
-	    while (nDir2 != dir) {
-		    QString f(nDir2.toUrl().fileName());
-		    KDevelop::Path d(nDir2.parent());
-		    _validFiles[project][d].validFiles << f;
-		    nDir2 = KDevelop::Path(d);
-	    }
+            // Add all the subdirectories
+            KDevelop::Path nDir2(nDir.toUrl());
+            while (nDir2 != dir) {
+                QString f(nDir2.toUrl().fileName());
+                KDevelop::Path d(nDir2.parent());
+                _validFiles[project][d].validFiles << f;
+                nDir2 = KDevelop::Path(d);
+            }
 //             nDir.adjustPath(KUrl::AddTrailingSlash);
             _validFiles[project][nDir].validFiles << nFile.toUrl().fileName();
         }
@@ -319,13 +318,13 @@ KDevelop::ProjectFolderItem *KDevKernelPlugin::import(KDevelop::IProject *projec
 
     if (cg.hasKey(KERN_ARCH)) {
         KDevelop::Path archUrl(projectRoot, "arch/");
-	QString arch(cg.readEntry(KERN_ARCH, ""));
-	KDevelop::Path archArchUrl(archUrl, arch);
+        QString arch(cg.readEntry(KERN_ARCH, ""));
+        KDevelop::Path archArchUrl(archUrl, arch);
 // 	archArchUrl.adjustPath(KUrl::AddTrailingSlash);
         rootFiles.validFiles << "arch";
         _validFiles[project][archUrl].lastUpdate = QDateTime::currentDateTime();
         _validFiles[project][archUrl].validFiles << arch;
-	_validFiles[project][archArchUrl].validFiles << "boot";
+        _validFiles[project][archArchUrl].validFiles << "boot";
     }
 
     /*
@@ -517,17 +516,16 @@ KJob *KDevKernelPlugin::jobForTarget(KDevelop::IProject *project, const QStringL
     if (_builder) {
         return _builder->executeMakeTargets(project->projectItem(),
                                             targets, makeVarsForProject(project));
-    }
-    else return 0;
+    } else return 0;
 }
 
 QList<KDevelop::IProjectBuilder *> KDevKernelPlugin::additionalBuilderPlugins(KDevelop::IProject *project) const
 {
-	Q_UNUSED(project);
+    Q_UNUSED(project);
 
-	QList<KDevelop::IProjectBuilder *> ret;
-	ret << _builder;
-	return ret;
+    QList<KDevelop::IProjectBuilder *> ret;
+    ret << _builder;
+    return ret;
 }
 
 int KDevKernelPlugin::perProjectConfigPages() const
