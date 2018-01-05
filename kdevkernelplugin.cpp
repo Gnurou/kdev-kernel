@@ -414,7 +414,7 @@ bool KDevKernelPlugin::isValid(const KDevelop::Path &url, const bool isFolder, K
         QStringList vFiles(cg.readEntry(KERN_VALIDFILES, QStringList()));
         KDevelop::Path pRoot(project->path());
 //         pRoot.adjustPath(KUrl::AddTrailingSlash);
-        QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()));
+        QString fPath(url.toLocalFile().mid(pRoot.toLocalFile().size()+1)); // +1 instead of AddTrailingSlash
         if (vFiles.contains(fPath)) valid = true;
     }
 

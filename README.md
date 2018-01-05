@@ -1,6 +1,8 @@
 KDevelop Linux Kernel Development Plugin
 ========================================
 
+## This branch contains ported code to KF5/Qt5/KDevelop 5. It generally works but with a lot of bugs!
+
 This plugin offers a "Linux Kernel" project type to KDevelop that makes it easy and comfortable to work on the Linux kernel.
 
 The raw KDevelop comes with extremely useful cross-reference and code parsing tools, but they do not apply well to the Linux kernel. Problems are:
