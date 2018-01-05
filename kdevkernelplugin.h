@@ -91,7 +91,7 @@ public:
      * A file is valid if it belongs to the list of files that are enabled through the kernel configuration.
      * A directory is valid if it contains any file we are interested in.
      */
-    virtual bool isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const;
+    virtual bool isValid(const KDevelop::Path &url, const bool isFolder, KDevelop::IProject *project) const override;
     virtual KDevelop::Path buildDirectory(KDevelop::ProjectBaseItem *item) const override;
     virtual QString extraArguments(KDevelop::ProjectBaseItem *item) const override;
 

@@ -6,8 +6,17 @@
   <kcfgfile arg="true" />
 
   <group name="KDevKernel">
-      <entry name="SplitterSizes" type="IntList">
-      <label>How the main window is divided.</label>
+    <entry name="buildDir" key="BuildDir" type="Path">
+      <label>Selected build directory.</label>
+    </entry>
+    <entry name="arch" key="Arch" type="String">
+      <label>Selected architecture.</label>
+    </entry>
+    <entry name="defconfig" key="Defconfig" type="String">
+      <label>Selected defconfig.</label>
+    </entry>
+    <entry name="crossCompiler" key="CrossCompiler" type="Path">
+      <label>Selected defconfig.</label>
     </entry>
   </group>
 </kcfg>

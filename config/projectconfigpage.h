@@ -23,6 +23,7 @@
 namespace KDevelop
 {
 class IProject;
+class Path;
 }
 
 namespace KDevKernel
@@ -45,11 +46,15 @@ public:
     QString fullName() const override;
     QIcon icon() const override;
 
-// public slots:
-//     void dataChanged();
+    void apply() override;
+    void reset() override;
+
+private Q_SLOTS:
+    void archChanged(const QString &arch);
 
 private:
     QScopedPointer<Ui::ProjectConfigPage> ui;
+    KDevelop::IProject* project;
 };
 
 }
