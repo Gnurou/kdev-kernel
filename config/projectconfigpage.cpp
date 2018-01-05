@@ -68,6 +68,8 @@ void ProjectConfigPage::apply()
         cg.writeEntry(KERN_BDIR, ui->kcfg_buildDir->url());
     else cg.deleteEntry(KERN_BDIR);
 
+    cg.writeEntry(KERN_ARCH, ui->kcfg_arch->currentText());
+
     if (!ui->kcfg_crossCompiler->url().isEmpty()) {
         QString cc(ui->kcfg_crossCompiler->url().toLocalFile());
         cc.remove("file://");

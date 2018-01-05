@@ -53,7 +53,7 @@ class KDevKernelPlugin : public KDevelop::AbstractFileManagerPlugin, public KDev
     Q_INTERFACES(KDevelop::IBuildSystemManager)
 
 private:
-    IMakeBuilder *_builder;
+    IMakeBuilder *m_builder;
 
     mutable QMap<KDevelop::IProject *, QMap<KDevelop::Path, ValidFilesList > > _validFiles;
     mutable QMap<KDevelop::IProject *, QStringList> _machDirs;
@@ -78,7 +78,6 @@ public:
     // IBuildSystemManager interface
     virtual KDevelop::IProjectBuilder *builder() const override;
     virtual KDevelop::Path::List includeDirectories(KDevelop::ProjectBaseItem *item) const override;
-    virtual KDevelop::Path::List includeDirectories(KDevelop::IProject *project) const;
     virtual KDevelop::Path::List frameworkDirectories(KDevelop::ProjectBaseItem *item) const override;
     virtual QHash<QString, QString> defines(KDevelop::ProjectBaseItem *item) const override;
     virtual KDevelop::ProjectTargetItem *createTarget(const QString &target, KDevelop::ProjectFolderItem *parent) override;
@@ -111,6 +110,7 @@ public:
 protected:
     virtual MakeVariables makeVarsForProject(KDevelop::IProject *project);
     virtual KJob *jobForTarget(KDevelop::IProject *project, const QStringList &targets);
+    virtual KDevelop::Path::List includeDirectories(KDevelop::IProject *project) const;
 
 private slots:
     virtual void projectClosing(KDevelop::IProject *project);
